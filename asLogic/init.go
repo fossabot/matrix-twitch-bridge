@@ -4,8 +4,10 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/fatih/color"
+	"github.com/matrix-org/gomatrix"
 	"log"
 	"maunium.net/go/mautrix-appservice-go"
+	"strings"
 )
 
 var config *appservice.Config
@@ -50,9 +52,41 @@ func (q QueryHandler) QueryAlias(alias string) bool {
 	return false
 }
 
+type registerAuth struct {
+	Type string `json:"type"`
+}
+
 func (q QueryHandler) QueryUser(userID string) bool {
 	if q.users[userID] != nil {
 		return true
 	}
-	return false
+	user := user.User{}
+	user.Mxid = userID
+	client, err := gomatrix.NewClient(config.HomeserverURL, userID, config.Registration.AppToken)
+	if err != nil {
+		config.Log.Errorln(err)
+		return false
+	}
+	user.MXClient = client
+	username := strings.Split(strings.TrimPrefix(userID, "@"), ":")[0]
+
+	registerReq := gomatrix.ReqRegister{
+		Username: username,
+		Auth: registerAuth{
+			Type: "m.login.application_service",
+		},
+	}
+	register, inter, err := user.MXClient.Register(&registerReq)
+	if err != nil {
+		config.Log.Errorln(err)
+		return false
+	}
+	if inter != nil || register == nil {
+		config.Log.Errorln("Error encountered during user registration")
+		return false
+	}
+	client.AppServiceUserID = userID
+
+	// TODO Link username to user on twitch (do some magic check if the user exists by crawling the channel page?) https://api.twitch.tv/kraken/users?login=<username>  DOC: https://dev.twitch.tv/docs/v5/
+	return true
 }

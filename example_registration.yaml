@@ -1,14 +1,14 @@
 id: ""
 url: http://localhost:29313
-as_token: Ng4AjW6ralO1XSCNcXFqk6N5OrmBi9xLpGBcJZqIWeO83kD5D3B4sNn49KT47H7d
-hs_token: 1bBgkAJsbsDmne8mVRRZ7epQoqVCmRJriZT03bOuNUs8sN9ERogaBum6M9SgjXKF
+as_token: aeOblj4V7il11ARoh0qbwarf1EYWOwUwmnTIRVGv2wMLUfvRDcTpyDYqreLdYLJl
+hs_token: Vod0moPtjfgvHpqIfjfKMwdfeNIQBUCxTGW2FvCyCb1mNTd6JEWIcPM572LlyVgQ
 sender_localpart: twitch
 rate_limited: false
 namespaces:
   users:
-  - regex: '#_twitch_.+:example.com'
+  - regex: '@twitch_.+:example.com'
     exclusive: true
-  - regex: '@_twitch_.+:example.com'
+  aliases:
+  - regex: '#twitch_.+:example.com'
     exclusive: true
-  aliases: []
   rooms: []

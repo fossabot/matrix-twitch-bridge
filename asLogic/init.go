@@ -1,14 +1,15 @@
 package asLogic
 
 import (
-	"maunium.net/go/mautrix-appservice-go"
-	"log"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/fatih/color"
+	"log"
+	"maunium.net/go/mautrix-appservice-go"
 )
 
 var config *appservice.Config
 
-func Init()  {
+func Init() {
 	var boldGreen = color.New(color.FgGreen).Add(color.Bold)
 	appservice.GenerateRegistration("twitch", "twitch", true, true)
 	boldGreen.Println("Please restart the Appservice with \"--config\"-flag applied")
@@ -37,16 +38,16 @@ func Run(cfgFile string) error {
 }
 
 type QueryHandler struct {
-	users map[string]string
+	users   map[string]*user.User
 	aliases map[string]string
 }
 
-func(q QueryHandler) QueryAlias(alias string) bool {
+func (q QueryHandler) QueryAlias(alias string) bool {
 	// TODO implement logic
 	return false
 }
 
-func(q QueryHandler) QueryUser(userID string) bool {
+func (q QueryHandler) QueryUser(userID string) bool {
 	// TODO implement logic
 	return false
 }

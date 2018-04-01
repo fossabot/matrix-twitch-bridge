@@ -1,6 +1,7 @@
 package asLogic
 
 import (
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/fatih/color"
 	"log"
@@ -39,15 +40,19 @@ func Run(cfgFile string) error {
 
 type QueryHandler struct {
 	users   map[string]*user.User
-	aliases map[string]string
+	aliases map[string]*room.Room
 }
 
 func (q QueryHandler) QueryAlias(alias string) bool {
-	// TODO implement logic
+	if q.aliases[alias] != nil {
+		return true
+	}
 	return false
 }
 
 func (q QueryHandler) QueryUser(userID string) bool {
-	// TODO implement logic
+	if q.users[userID] != nil {
+		return true
+	}
 	return false
 }

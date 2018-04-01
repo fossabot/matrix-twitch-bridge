@@ -1,0 +1,13 @@
+homeserver_domain: example.com
+homeserver_url: http://localhost:8008
+registration: example_registration.yaml
+host:
+  hostname: localhost
+  port: 29313
+logging:
+  directory: ./logs
+  file_name_format: '%[1]s-%02[2]d.log'
+  file_date_format: "2006-01-02"
+  file_mode: 384
+  timestamp_format: Jan _2, 2006 15:04:05
+  print_debug: false

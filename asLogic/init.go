@@ -14,8 +14,12 @@ func Init()  {
 	boldGreen.Println("Please restart the Appservice with \"--config\"-flag applied")
 }
 
-func Run(cfgFile string)  {
-	config = appservice.Load(cfgFile)
+func Run(cfgFile string) error {
+	var err error
+	config, err = appservice.Load(cfgFile)
+	if err != nil {
+		return err
+	}
 
 	queryHandler := QueryHandler{}
 
@@ -29,6 +33,7 @@ func Run(cfgFile string)  {
 			log.Println(event)
 		}
 	}
+	return nil
 }
 
 type QueryHandler struct {

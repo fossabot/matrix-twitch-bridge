@@ -60,14 +60,14 @@ func (q QueryHandler) QueryUser(userID string) bool {
 	if q.users[userID] != nil {
 		return true
 	}
-	user := user.User{}
-	user.Mxid = userID
+	asUser := user.User{}
+	asUser.Mxid = userID
 	client, err := gomatrix.NewClient(config.HomeserverURL, userID, config.Registration.AppToken)
 	if err != nil {
 		config.Log.Errorln(err)
 		return false
 	}
-	user.MXClient = client
+	asUser.MXClient = client
 	username := strings.Split(strings.TrimPrefix(userID, "@"), ":")[0]
 
 	registerReq := gomatrix.ReqRegister{
@@ -76,7 +76,7 @@ func (q QueryHandler) QueryUser(userID string) bool {
 			Type: "m.login.application_service",
 		},
 	}
-	register, inter, err := user.MXClient.Register(&registerReq)
+	register, inter, err := asUser.MXClient.Register(&registerReq)
 	if err != nil {
 		config.Log.Errorln(err)
 		return false
@@ -87,6 +87,7 @@ func (q QueryHandler) QueryUser(userID string) bool {
 	}
 	client.AppServiceUserID = userID
 
+	q.users[userID] = &asUser
 	// TODO Link username to user on twitch (do some magic check if the user exists by crawling the channel page?) https://api.twitch.tv/kraken/users?login=<username>  DOC: https://dev.twitch.tv/docs/v5/
 	return true
 }

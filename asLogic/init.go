@@ -2,15 +2,15 @@ package asLogic
 
 import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/fatih/color"
 	"github.com/matrix-org/gomatrix"
 	"log"
 	"maunium.net/go/mautrix-appservice-go"
 	"strings"
 )
-
-var config *appservice.Config
 
 func Init() {
 	var boldGreen = color.New(color.FgGreen).Add(color.Bold)
@@ -20,20 +20,23 @@ func Init() {
 
 func Run(cfgFile string) error {
 	var err error
-	config, err = appservice.Load(cfgFile)
+	util.Config, err = appservice.Load(cfgFile)
 	if err != nil {
 		return err
 	}
 
 	queryHandler := QueryHandler{}
+	queryHandler.twitchRooms = make(map[string]string)
+	queryHandler.twitchUsers = make(map[string]*user.User)
 
-	config.Init(queryHandler)
+	util.Config.Init(queryHandler)
 
-	config.Listen()
+	util.Config.Listen()
+	twitch.Listen(queryHandler.twitchUsers, queryHandler.twitchRooms)
 
 	for {
 		select {
-		case event := <-config.Events:
+		case event := <-util.Config.Events:
 			log.Println(event)
 		}
 	}
@@ -41,8 +44,10 @@ func Run(cfgFile string) error {
 }
 
 type QueryHandler struct {
-	users   map[string]*user.User
-	aliases map[string]*room.Room
+	users       map[string]*user.User
+	aliases     map[string]*room.Room
+	twitchUsers map[string]*user.User
+	twitchRooms map[string]string
 }
 
 func (q QueryHandler) QueryAlias(alias string) bool {
@@ -62,9 +67,9 @@ func (q QueryHandler) QueryUser(userID string) bool {
 	}
 	asUser := user.User{}
 	asUser.Mxid = userID
-	client, err := gomatrix.NewClient(config.HomeserverURL, userID, config.Registration.AppToken)
+	client, err := gomatrix.NewClient(util.Config.HomeserverURL, userID, util.Config.Registration.AppToken)
 	if err != nil {
-		config.Log.Errorln(err)
+		util.Config.Log.Errorln(err)
 		return false
 	}
 	asUser.MXClient = client
@@ -78,11 +83,11 @@ func (q QueryHandler) QueryUser(userID string) bool {
 	}
 	register, inter, err := asUser.MXClient.Register(&registerReq)
 	if err != nil {
-		config.Log.Errorln(err)
+		util.Config.Log.Errorln(err)
 		return false
 	}
 	if inter != nil || register == nil {
-		config.Log.Errorln("Error encountered during user registration")
+		util.Config.Log.Errorln("Error encountered during user registration")
 		return false
 	}
 	client.AppServiceUserID = userID

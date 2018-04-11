@@ -32,6 +32,10 @@ func Run(cfgFile string) error {
 	//TODO Make sure to load them from a DB!!!!
 	queryHandler.twitchRooms = make(map[string]string)
 	queryHandler.twitchUsers = make(map[string]*user.ASUser)
+	queryHandler.users, err = db.GetASUsers()
+	if err != nil {
+		return err
+	}
 	realUsers = make(map[string]*user.RealUser)
 
 	util.Config.Init(queryHandler)

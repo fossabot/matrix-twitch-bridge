@@ -29,12 +29,12 @@ func Run(cfgFile string) error {
 	}
 
 	queryHandler := QueryHandler{}
-	//TODO Make sure to load them from a DB!!!!
 	queryHandler.aliases, err = db.GetRooms()
 	if err != nil {
 		return err
 	}
 
+	// TODO Make sure to load them from a DB!!!! (Even I forgot why I need this map...)
 	queryHandler.twitchRooms = make(map[string]string)
 
 	queryHandler.twitchUsers, err = db.GetTwitchUsers()

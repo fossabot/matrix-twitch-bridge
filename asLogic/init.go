@@ -30,13 +30,27 @@ func Run(cfgFile string) error {
 
 	queryHandler := QueryHandler{}
 	//TODO Make sure to load them from a DB!!!!
+	queryHandler.aliases, err = db.GetRooms()
+	if err != nil {
+		return err
+	}
+
 	queryHandler.twitchRooms = make(map[string]string)
-	queryHandler.twitchUsers = make(map[string]*user.ASUser)
+
+	queryHandler.twitchUsers, err = db.GetTwitchUsers()
+	if err != nil {
+		return err
+	}
+
 	queryHandler.users, err = db.GetASUsers()
 	if err != nil {
 		return err
 	}
-	realUsers = make(map[string]*user.RealUser)
+
+	realUsers, err = db.GetRealUsers()
+	if err != nil {
+		return err
+	}
 
 	util.Config.Init(queryHandler)
 
@@ -57,6 +71,7 @@ func Run(cfgFile string) error {
 				if mxUser == nil {
 					mxUser = &user.RealUser{}
 					mxUser.Mxid = event.SenderID
+					db.SaveRealUser(mxUser)
 					// Implement Auth logic and Queue the message for later!
 					continue
 				}
@@ -102,6 +117,8 @@ func (q QueryHandler) QueryAlias(alias string) bool {
 	createRoomReq.RoomAliasName = roomname
 	createRoomReq.Preset = "public_chat"
 	client.CreateRoom(createRoomReq)
+
+	//db.SaveRoom()
 	return false
 }
 

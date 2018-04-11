@@ -1,9 +1,28 @@
 package user
 
-import "github.com/matrix-org/gomatrix"
+import (
+	"github.com/gorilla/websocket"
+	"github.com/matrix-org/gomatrix"
+)
 
-type User struct {
-	Mxid       string
-	TwitchName string
-	MXClient   *gomatrix.Client
+type ASUser struct {
+	Mxid        string
+	TwitchName  string
+	TwitchToken string
+	TwitchWS    *websocket.Conn
+	MXClient    *gomatrix.Client
+}
+
+type RealUser struct {
+	Mxid        string
+	TwitchName  string
+	TwitchToken string
+	TwitchWS    *websocket.Conn
+}
+
+type BotUser struct {
+	Mxid        string
+	TwitchName  string
+	TwitchToken string
+	TwitchWS    *websocket.Conn
 }

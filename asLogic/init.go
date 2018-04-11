@@ -18,6 +18,8 @@ func Init() {
 	boldGreen.Println("Please restart the Appservice with \"--config\"-flag applied")
 }
 
+var realUsers map[string]*user.RealUser
+
 func Run(cfgFile string) error {
 	var err error
 	util.Config, err = appservice.Load(cfgFile)
@@ -26,27 +28,53 @@ func Run(cfgFile string) error {
 	}
 
 	queryHandler := QueryHandler{}
+	//TODO Make sure to load them from a DB!!!!
 	queryHandler.twitchRooms = make(map[string]string)
-	queryHandler.twitchUsers = make(map[string]*user.User)
+	queryHandler.twitchUsers = make(map[string]*user.ASUser)
+	realUsers = make(map[string]*user.RealUser)
 
 	util.Config.Init(queryHandler)
 
 	util.Config.Listen()
-	twitch.Listen(queryHandler.twitchUsers, queryHandler.twitchRooms)
+
+	// INIT ROOM BRIDGES
+	//TOKEN NEEDS TO BE A BOT
+	//USERNAME NEEDS TO BE A BOT
+	//twitch.Connect(token, username)
+	//twitch.Listen(q.twitchUsers, q.twitchRooms)
 
 	for {
 		select {
 		case event := <-util.Config.Events:
-			log.Println(event)
+			switch event.Type {
+			case "m.room.message":
+				mxUser := realUsers[event.SenderID]
+				if mxUser == nil {
+					mxUser = &user.RealUser{}
+					mxUser.Mxid = event.SenderID
+					// Implement Auth logic and Queue the message for later!
+					continue
+				}
+				if mxUser.TwitchWS == nil {
+					if mxUser.TwitchToken != "" && mxUser.TwitchName != "" {
+						mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchToken, mxUser.TwitchName)
+						if err != nil {
+							log.Println("[ERROR]: ", err)
+							continue
+						}
+					}
+				}
+
+			}
 		}
 	}
 	return nil
 }
 
 type QueryHandler struct {
-	users       map[string]*user.User
+	users       map[string]*user.ASUser
 	aliases     map[string]*room.Room
-	twitchUsers map[string]*user.User
+	twitchUsers map[string]*user.ASUser
 	twitchRooms map[string]string
 }
 
@@ -65,7 +93,7 @@ func (q QueryHandler) QueryUser(userID string) bool {
 	if q.users[userID] != nil {
 		return true
 	}
-	asUser := user.User{}
+	asUser := user.ASUser{}
 	asUser.Mxid = userID
 	client, err := gomatrix.NewClient(util.Config.HomeserverURL, userID, util.Config.Registration.AppToken)
 	if err != nil {

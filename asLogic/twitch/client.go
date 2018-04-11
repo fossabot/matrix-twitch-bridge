@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func Connect(oauthToken, username string) (err error) {
+func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
 	// Make sure to catch the Interrupt Signal to close the WS gracefully
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
@@ -20,7 +20,7 @@ func Connect(oauthToken, username string) (err error) {
 	util.Done = make(chan struct{})
 
 	dialer := websocket.DefaultDialer
-	util.WS, _, err = dialer.Dial("wss://irc-ws.chat.twitch.tv:443/irc", nil)
+	WS, _, err = dialer.Dial("wss://irc-ws.chat.twitch.tv:443/irc", nil)
 
 	go func() {
 		for {
@@ -30,7 +30,7 @@ func Connect(oauthToken, username string) (err error) {
 			case <-interrupt:
 				// Cleanly close the connection by sending a close message and then
 				// waiting (with timeout) for the server to close the connection.
-				err = util.WS.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+				err = WS.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 				select {
 				case <-util.Done:
 				case <-time.After(time.Second):
@@ -41,16 +41,16 @@ func Connect(oauthToken, username string) (err error) {
 	}()
 
 	// Request needed IRC Capabilities https://dev.twitch.tv/docs/irc/#twitch-specific-irc-capabilities
-	util.WS.WriteMessage(websocket.TextMessage, []byte("CAP REQ :twitch.tv/membership twitch.tv/tags"))
+	WS.WriteMessage(websocket.TextMessage, []byte("CAP REQ :twitch.tv/membership twitch.tv/tags"))
 
 	//Login
-	util.WS.WriteMessage(websocket.TextMessage, []byte("PASS oauth:"+oauthToken))
-	util.WS.WriteMessage(websocket.TextMessage, []byte("NICK "+username))
+	WS.WriteMessage(websocket.TextMessage, []byte("PASS oauth:"+oauthToken))
+	WS.WriteMessage(websocket.TextMessage, []byte("NICK "+username))
 
 	return
 }
 
-func Listen(users map[string]*user.User, rooms map[string]string) {
+func Listen(users map[string]*user.ASUser, rooms map[string]string) {
 	go func() {
 		defer close(util.Done)
 		for {

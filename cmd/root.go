@@ -18,22 +18,23 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
+	"github.com/spf13/cobra"
 )
 
 var cfgFile string
+var dbFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "matrix-twitch-bridge",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use: "matrix-twitch-bridge",
+	//TODO Descriptions
+	Short: "",
+	Long:  ``,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		db.Init(dbFile)
+	},
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
@@ -55,9 +56,6 @@ func Execute() {
 }
 
 func init() {
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./config.yaml  It will get generated if no value is given)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./config.yaml", "config file (default is ./config.yaml . It will get generated if no value is given)")
+	rootCmd.PersistentFlags().StringVar(&dbFile, "db", "./twitch.db", "db file where data gets saved/cached to (default is ./twitch.db .  It will get generated if no value is given)")
 }

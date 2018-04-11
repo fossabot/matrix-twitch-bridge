@@ -6,11 +6,9 @@ import (
 )
 
 type ASUser struct {
-	Mxid        string
-	TwitchName  string
-	TwitchToken string
-	TwitchWS    *websocket.Conn
-	MXClient    *gomatrix.Client
+	Mxid       string
+	TwitchName string
+	MXClient   *gomatrix.Client
 }
 
 type RealUser struct {

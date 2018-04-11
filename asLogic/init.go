@@ -1,6 +1,7 @@
 package asLogic
 
 import (
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
@@ -82,6 +83,21 @@ func (q QueryHandler) QueryAlias(alias string) bool {
 	if q.aliases[alias] != nil {
 		return true
 	}
+	//TODO Check if channel exists!!!!
+	client, err := gomatrix.NewClient(util.Config.HomeserverURL, "", util.Config.Registration.AppToken)
+	if err != nil {
+		util.Config.Log.Errorln(err)
+		return false
+	}
+
+	roomname := strings.Split(strings.TrimLeft(alias, "#"), ":")[0]
+
+	createRoomReq := &gomatrix.ReqCreateRoom{}
+	// TODO Get actual Name
+	createRoomReq.Name = roomname
+	createRoomReq.RoomAliasName = roomname
+	createRoomReq.Preset = "public_chat"
+	client.CreateRoom(createRoomReq)
 	return false
 }
 
@@ -121,6 +137,7 @@ func (q QueryHandler) QueryUser(userID string) bool {
 	client.AppServiceUserID = userID
 
 	q.users[userID] = &asUser
+	db.SaveASUser(q.users[userID])
 	// TODO Link username to user on twitch (do some magic check if the user exists by crawling the channel page?) https://api.twitch.tv/kraken/users?login=<username>  DOC: https://dev.twitch.tv/docs/v5/
 	return true
 }

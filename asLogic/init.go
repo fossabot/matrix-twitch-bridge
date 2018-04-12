@@ -17,14 +17,14 @@ import (
 func Init() {
 	var boldGreen = color.New(color.FgGreen).Add(color.Bold)
 	appservice.GenerateRegistration("twitch", "twitch", true, true)
-	boldGreen.Println("Please restart the Appservice with \"--config\"-flag applied")
+	boldGreen.Println("Please restart the Appservice with \"--config\" and \"--client_id\"-flag applied")
 }
 
 var realUsers map[string]*user.RealUser
 
-func Run(cfgFile string) error {
+func Run() error {
 	var err error
-	util.Config, err = appservice.Load(cfgFile)
+	util.Config, err = appservice.Load(util.CfgFile)
 	if err != nil {
 		return err
 	}
@@ -103,14 +103,14 @@ func (q QueryHandler) QueryAlias(alias string) bool {
 	if q.aliases[alias] != nil {
 		return true
 	}
-	//TODO Check if channel exists!!!!
+	var tUsername string
 	client, err := gomatrix.NewClient(util.Config.HomeserverURL, "", util.Config.Registration.AppToken)
 	if err != nil {
 		util.Config.Log.Errorln(err)
 		return false
 	}
 
-	roomname := strings.Split(strings.TrimLeft(alias, "#"), ":")[0]
+	roomalias := strings.Split(strings.TrimLeft(alias, "#"), ":")[0]
 
 	createRoomReq := &gomatrix.ReqCreateRoom{}
 	// TODO Get actual Name
@@ -120,16 +120,48 @@ func (q QueryHandler) QueryAlias(alias string) bool {
 			util.Config.Log.Errorln(err)
 			return false
 		}
-		if r.MatchString(roomname) {
-			createRoomReq.Name = r.FindStringSubmatch(roomname)[0]
+		if r.MatchString(alias) {
+			tUsername := r.FindStringSubmatch(alias)[0]
+			userdata, err := twitch.RequestUserData(tUsername)
+			if err != nil {
+				util.Config.Log.Errorln(err)
+				return false
+			}
+			if userdata.Total == 0 {
+				util.Config.Log.Errorln("user missing")
+				return false
+			}
+			createRoomReq.Name = userdata.Users[0].DisplayName
+			resp, err := client.UploadLink(userdata.Users[0].Logo)
+			content := make(map[string]interface{})
+			content["url"] = resp.ContentURI
+			m_room_avatar_event := gomatrix.Event{
+				Type:    "m.room.avatar",
+				Content: content,
+			}
+			createRoomReq.InitialState = append(createRoomReq.InitialState, m_room_avatar_event)
 			break
 		}
 	}
-	createRoomReq.RoomAliasName = roomname
+	createRoomReq.RoomAliasName = roomalias
 	createRoomReq.Preset = "public_chat"
-	client.CreateRoom(createRoomReq)
+	resp, err := client.CreateRoom(createRoomReq)
+	if err != nil {
+		util.Config.Log.Errorln(err)
+		return false
+	}
 
-	//db.SaveRoom()
+	troom := &room.Room{
+		Alias:         alias,
+		ID:            resp.RoomID,
+		TwitchChannel: tUsername,
+	}
+	q.aliases[alias] = troom
+	err = db.SaveRoom(troom)
+	if err != nil {
+		util.Config.Log.Errorln(err)
+		return false
+	}
 	return false
 }
 
@@ -141,6 +173,27 @@ func (q QueryHandler) QueryUser(userID string) bool {
 	if q.users[userID] != nil {
 		return true
 	}
+	var tUsername string
+	for _, v := range util.Config.Registration.Namespaces.UserIDs {
+		r, err := regexp.Compile(v.Regex)
+		if err != nil {
+			util.Config.Log.Errorln(err)
+			return false
+		}
+		if r.MatchString(userID) {
+			tUsername = r.FindStringSubmatch(userID)[0]
+			break
+		}
+	}
+
+	check, err := twitch.CheckTwitchUser(tUsername)
+	if err != nil {
+		util.Config.Log.Errorln(err)
+		return false
+	}
+	if !check {
+		return false
+	}
 	asUser := user.ASUser{}
 	asUser.Mxid = userID
 	client, err := gomatrix.NewClient(util.Config.HomeserverURL, userID, util.Config.Registration.AppToken)
@@ -149,15 +202,15 @@ func (q QueryHandler) QueryUser(userID string) bool {
 		return false
 	}
 	asUser.MXClient = client
-	username := strings.Split(strings.TrimPrefix(userID, "@"), ":")[0]
+	MXusername := strings.Split(strings.TrimPrefix(userID, "@"), ":")[0]
 
 	registerReq := gomatrix.ReqRegister{
-		Username: username,
+		Username: MXusername,
 		Auth: registerAuth{
 			Type: "m.login.application_service",
 		},
 	}
-	register, inter, err := asUser.MXClient.Register(&registerReq)
+	register, inter, err := client.Register(&registerReq)
 	if err != nil {
 		util.Config.Log.Errorln(err)
 		return false
@@ -167,9 +220,24 @@ func (q QueryHandler) QueryUser(userID string) bool {
 		return false
 	}
 	client.AppServiceUserID = userID
+	userdata, err := twitch.RequestUserData(tUsername)
+	if err != nil {
+		util.Config.Log.Errorln(err)
+		return false
+	}
+	if userdata.Total == 0 {
+		util.Config.Log.Errorln("user missing")
+		return false
+	}
+	client.SetDisplayName(userdata.Users[0].DisplayName)
+	resp, err := client.UploadLink(userdata.Users[0].Logo)
+	client.SetAvatarURL(resp.ContentURI)
 
 	q.users[userID] = &asUser
-	db.SaveASUser(q.users[userID])
-	// TODO Link username to user on twitch (do some magic check if the user exists by crawling the channel page?) https://api.twitch.tv/kraken/users?login=<username>  DOC: https://dev.twitch.tv/docs/v5/
+	err = db.SaveASUser(q.users[userID])
+	if err != nil {
+		util.Config.Log.Errorln(err)
+		return false
+	}
 	return true
 }

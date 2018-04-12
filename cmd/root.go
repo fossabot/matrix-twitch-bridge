@@ -20,11 +20,9 @@ import (
 
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/spf13/cobra"
 )
-
-var cfgFile string
-var dbFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -33,15 +31,15 @@ var rootCmd = &cobra.Command{
 	Short: "",
 	Long:  ``,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		db.Init(dbFile)
+		db.Init()
 	},
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		if cfgFile == "" {
+		if util.CfgFile == "" {
 			asLogic.Init()
 		} else {
-			asLogic.Run(cfgFile)
+			asLogic.Run()
 		}
 	},
 }
@@ -56,6 +54,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./config.yaml", "config file (default is ./config.yaml . It will get generated if no value is given)")
-	rootCmd.PersistentFlags().StringVar(&dbFile, "db", "./twitch.db", "db file where data gets saved/cached to (default is ./twitch.db .  It will get generated if no value is given)")
+	rootCmd.PersistentFlags().StringVar(&util.CfgFile, "config", "./config.yaml", "config file (default is ./config.yaml . It will get generated if no value is given)")
+	rootCmd.PersistentFlags().StringVar(&util.DbFile, "db", "./twitch.db", "db file where data gets saved/cached to (default is ./twitch.db .  It will get generated if no value is given)")
+	rootCmd.PersistentFlags().StringVar(&util.ClientID, "client_id", "", "ClientID of the registered Twitch App")
 }

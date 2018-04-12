@@ -8,6 +8,9 @@ import (
 var Config *appservice.Config
 var WS *websocket.Conn
 var Done chan struct{}
+var CfgFile string
+var DbFile string
+var ClientID string
 
 type TMessage struct {
 	/*

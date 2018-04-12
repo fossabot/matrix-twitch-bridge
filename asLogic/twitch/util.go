@@ -29,6 +29,7 @@ func RequestUserData(username string) (*UserJson, error) {
 		err := "Missing body"
 		return nil, fmt.Errorf("%s", err)
 	}
+	defer res.Body.Close()
 
 	err = json.NewDecoder(res.Body).Decode(u)
 	if err != nil {

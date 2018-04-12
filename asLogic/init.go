@@ -57,7 +57,7 @@ func Run() error {
 
 	util.Config.Listen()
 
-	// INIT ROOM BRIDGES
+	//TODO INIT ROOM BRIDGES
 	//TOKEN NEEDS TO BE A BOT
 	//USERNAME NEEDS TO BE A BOT
 	//twitch.Connect(token, username)

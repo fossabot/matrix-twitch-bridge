@@ -10,6 +10,7 @@ import (
 	"github.com/matrix-org/gomatrix"
 	"log"
 	"maunium.net/go/mautrix-appservice-go"
+	"regexp"
 	"strings"
 )
 
@@ -72,7 +73,7 @@ func Run(cfgFile string) error {
 					mxUser = &user.RealUser{}
 					mxUser.Mxid = event.SenderID
 					db.SaveRealUser(mxUser)
-					// Implement Auth logic and Queue the message for later!
+					// TODO Implement Auth logic and Queue the message for later!
 					continue
 				}
 				if mxUser.TwitchWS == nil {
@@ -113,7 +114,17 @@ func (q QueryHandler) QueryAlias(alias string) bool {
 
 	createRoomReq := &gomatrix.ReqCreateRoom{}
 	// TODO Get actual Name
-	createRoomReq.Name = roomname
+	for _, v := range util.Config.Registration.Namespaces.RoomAliases {
+		r, err := regexp.Compile(v.Regex)
+		if err != nil {
+			util.Config.Log.Errorln(err)
+			return false
+		}
+		if r.MatchString(roomname) {
+			createRoomReq.Name = r.FindStringSubmatch(roomname)[0]
+			break
+		}
+	}
 	createRoomReq.RoomAliasName = roomname
 	createRoomReq.Preset = "public_chat"
 	client.CreateRoom(createRoomReq)

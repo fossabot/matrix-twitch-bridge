@@ -11,7 +11,7 @@ and all Matrix messages through to the Twitch Channel.
 
 To install all dependencies and add a binary `matrix-twitch-bridge`:
 
-```
+```bash
 go get -u -v github.com/mattn/go-sqlite3  # Required for the Database
 go get -u -v github.com/Nordgedanken/matrix-twitch-bridge
 ```
@@ -34,7 +34,7 @@ and how to bridge Twitch channels/users.
 
 Finally, the bridge can be run using the following command:
 
-```
+```bash
 matrix-twitch-bridge --client_id=<client_id from your Twitch APP>
 ```
 

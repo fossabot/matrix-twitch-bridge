@@ -202,7 +202,6 @@ func (q QueryHandler) QueryAlias(alias string) bool {
 	err = db.SaveRoom(troom)
 	if err != nil {
 		util.Config.Log.Errorln(err)
-		return false
 	}
 	return false
 }
@@ -270,7 +269,6 @@ func (q QueryHandler) QueryUser(userID string) bool {
 	err = db.SaveUser(q.users[userID], "AS")
 	if err != nil {
 		util.Config.Log.Errorln(err)
-		return false
 	}
 	return true
 }

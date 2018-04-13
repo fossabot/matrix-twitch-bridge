@@ -107,10 +107,7 @@ func getUsers() (users *UserTransportStruct, err error) {
 
 	// get any error encountered during iteration
 	err = rows.Err()
-	if err != nil {
-		return nil, err
-	}
-	return transportStruct, nil
+	return transportStruct, err
 }
 
 func GetASUsers() (map[string]*user.ASUser, error) {

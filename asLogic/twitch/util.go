@@ -32,11 +32,7 @@ func RequestUserData(username string) (*UserJson, error) {
 	defer res.Body.Close()
 
 	err = json.NewDecoder(res.Body).Decode(u)
-	if err != nil {
-		return nil, err
-	}
-
-	return u, nil
+	return u, err
 }
 
 func CheckTwitchUser(username string) (bool, error) {

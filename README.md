@@ -2,7 +2,8 @@
 
 This is an Twitch bridge for Matrix using the Application Services (AS) API.
 
-This bridge will pass all TwitchChannel messages through to Matrix, and all Matrix messages through to the Twitch Channel.
+This bridge will pass all TwitchChannel messages through to Matrix,
+and all Matrix messages through to the Twitch Channel.
 
 ## Setup
 
@@ -11,8 +12,8 @@ This bridge will pass all TwitchChannel messages through to Matrix, and all Matr
 To install all dependencies and add a binary `matrix-twitch-bridge`:
 
 ```
-$ go get -u -v github.com/mattn/go-sqlite3                   # Required for the Database
-$ go get -u -v github.com/Nordgedanken/matrix-twitch-bridge  # The actual bridge application
+go get -u -v github.com/mattn/go-sqlite3  # Required for the Database
+go get -u -v github.com/Nordgedanken/matrix-twitch-bridge
 ```
 
 #### Requirements
@@ -34,7 +35,7 @@ and how to bridge Twitch channels/users.
 Finally, the bridge can be run using the following command:
 
 ```
-$ matrix-twitch-bridge --client_id=<client_id from your Twitch APP>
+matrix-twitch-bridge --client_id=<client_id from your Twitch APP>
 ```
 
 If you have changed the default config location add the `--condig`
@@ -45,9 +46,11 @@ If you want to change the DB location add the `--database`
 
 ## What does it do
 
-On startup, it will listen for incoming Twitch messages and forward them through to Matrix rooms.
-Each real Matrix user is represented by an Twitch client, and each real Twitch client is represented by a Matrix user. Full
-Two-Way communication in channels and PMs are supported.
+On startup, it will listen for incoming Twitch messages
+and forward them through to Matrix rooms.
+Each real Matrix user is represented by an Twitch client,
+and each real Twitch client is represented by a Matrix user.
+Full Two-Way communication in channels and PMs are supported.
 The Matrix users require to login first on Twitch before wrinting in Portal Rooms
 
 ## Usage

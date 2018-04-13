@@ -1,6 +1,7 @@
 package asLogic
 
 import (
+	"fmt"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
@@ -22,8 +23,9 @@ func Init() {
 
 var realUsers map[string]*user.RealUser
 
-func Run() error {
+func prepareRun() error {
 	var err error
+
 	util.Config, err = appservice.Load(util.CfgFile)
 	if err != nil {
 		return err
@@ -56,6 +58,15 @@ func Run() error {
 	util.Config.Init(queryHandler)
 
 	util.Config.Listen()
+
+	return nil
+}
+
+func Run() error {
+	err := prepareRun()
+	if err != nil {
+		return err
+	}
 
 	//TODO INIT ROOM BRIDGES
 	//TOKEN NEEDS TO BE A BOT
@@ -99,6 +110,44 @@ type QueryHandler struct {
 	twitchRooms map[string]string
 }
 
+func createRoom(client *gomatrix.Client, displayname, avatarURL, alias string) (*gomatrix.RespCreateRoom, error) {
+	createRoomReq := &gomatrix.ReqCreateRoom{}
+	createRoomReq.Name = displayname
+	resp, err := client.UploadLink(avatarURL)
+	content := make(map[string]interface{})
+	content["url"] = resp.ContentURI
+	m_room_avatar_event := gomatrix.Event{
+		Type:    "m.room.avatar",
+		Content: content,
+	}
+	createRoomReq.InitialState = append(createRoomReq.InitialState, m_room_avatar_event)
+
+	createRoomReq.RoomAliasName = alias
+	createRoomReq.Preset = "public_chat"
+	roomResp, err := client.CreateRoom(createRoomReq)
+	if err != nil {
+		return nil, err
+	}
+	return roomResp, nil
+}
+
+func createUser(client *gomatrix.Client, username string) error {
+	registerReq := gomatrix.ReqRegister{
+		Username: username,
+		Auth: registerAuth{
+			Type: "m.login.application_service",
+		},
+	}
+	register, inter, err := client.Register(&registerReq)
+	if err != nil {
+		return err
+	}
+	if inter != nil || register == nil {
+		return fmt.Errorf("%s", "Error encountered during user registration")
+	}
+	return nil
+}
+
 func (q QueryHandler) QueryAlias(alias string) bool {
 	if q.aliases[alias] != nil {
 		return true
@@ -112,7 +161,8 @@ func (q QueryHandler) QueryAlias(alias string) bool {
 
 	roomalias := strings.Split(strings.TrimLeft(alias, "#"), ":")[0]
 
-	createRoomReq := &gomatrix.ReqCreateRoom{}
+	var displayname string
+	var logoURL string
 	// TODO Get actual Name
 	for _, v := range util.Config.Registration.Namespaces.RoomAliases {
 		r, err := regexp.Compile(v.Regex)
@@ -131,21 +181,13 @@ func (q QueryHandler) QueryAlias(alias string) bool {
 				util.Config.Log.Errorln("user missing")
 				return false
 			}
-			createRoomReq.Name = userdata.Users[0].DisplayName
-			resp, err := client.UploadLink(userdata.Users[0].Logo)
-			content := make(map[string]interface{})
-			content["url"] = resp.ContentURI
-			m_room_avatar_event := gomatrix.Event{
-				Type:    "m.room.avatar",
-				Content: content,
-			}
-			createRoomReq.InitialState = append(createRoomReq.InitialState, m_room_avatar_event)
+			displayname = userdata.Users[0].DisplayName
+			logoURL = userdata.Users[0].Logo
 			break
 		}
 	}
-	createRoomReq.RoomAliasName = roomalias
-	createRoomReq.Preset = "public_chat"
-	resp, err := client.CreateRoom(createRoomReq)
+
+	resp, err := createRoom(client, displayname, logoURL, roomalias)
 	if err != nil {
 		util.Config.Log.Errorln(err)
 		return false
@@ -204,21 +246,12 @@ func (q QueryHandler) QueryUser(userID string) bool {
 	asUser.MXClient = client
 	MXusername := strings.Split(strings.TrimPrefix(userID, "@"), ":")[0]
 
-	registerReq := gomatrix.ReqRegister{
-		Username: MXusername,
-		Auth: registerAuth{
-			Type: "m.login.application_service",
-		},
-	}
-	register, inter, err := client.Register(&registerReq)
+	err = createUser(client, MXusername)
 	if err != nil {
 		util.Config.Log.Errorln(err)
 		return false
 	}
-	if inter != nil || register == nil {
-		util.Config.Log.Errorln("Error encountered during user registration")
-		return false
-	}
+
 	client.AppServiceUserID = userID
 	userdata, err := twitch.RequestUserData(tUsername)
 	if err != nil {

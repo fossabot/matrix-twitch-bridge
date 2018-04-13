@@ -33,8 +33,6 @@ var rootCmd = &cobra.Command{
 	PreRun: func(cmd *cobra.Command, args []string) {
 		db.Init()
 	},
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
 		if _, err := os.Stat(util.CfgFile); os.IsNotExist(err) {
 			asLogic.Init()

@@ -83,7 +83,7 @@ func Run() error {
 				if mxUser == nil {
 					mxUser = &user.RealUser{}
 					mxUser.Mxid = event.SenderID
-					db.SaveRealUser(mxUser)
+					db.SaveUser(mxUser, "REAL")
 					// TODO Implement Auth logic and Queue the message for later!
 					continue
 				}
@@ -267,7 +267,7 @@ func (q QueryHandler) QueryUser(userID string) bool {
 	client.SetAvatarURL(resp.ContentURI)
 
 	q.users[userID] = &asUser
-	err = db.SaveASUser(q.users[userID])
+	err = db.SaveUser(q.users[userID], "AS")
 	if err != nil {
 		util.Config.Log.Errorln(err)
 		return false

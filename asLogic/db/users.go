@@ -1,35 +1,13 @@
 package db
 
 import (
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/matrix-org/gomatrix"
 )
 
-func SaveASUser(user *user.ASUser) error {
-	db := Open()
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	stmt, err := tx.Prepare("INSERT INTO users (type, mxid, twitch_name) VALUES (?, ?, ?)")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	mxid := user.Mxid
-	twitchName := user.TwitchName
-
-	_, err = stmt.Exec("AS", mxid, twitchName)
-	if err != nil {
-		return err
-	}
-	tx.Commit()
-	return nil
-}
-
-func SaveRealUser(user *user.RealUser) error {
+func SaveUser(userA interface{}, Type string) error {
 	db := Open()
 	tx, err := db.Begin()
 	if err != nil {
@@ -40,36 +18,25 @@ func SaveRealUser(user *user.RealUser) error {
 		return err
 	}
 	defer stmt.Close()
+	var mxid string
+	var twitchName string
+	var twitchToken string
 
-	mxid := user.Mxid
-	twitchName := user.TwitchName
-	twitchToken := user.TwitchToken
-
-	_, err = stmt.Exec("REAL", mxid, twitchName, twitchToken)
-	if err != nil {
-		return err
+	switch v := userA.(type) {
+	case user.ASUser:
+		mxid = v.Mxid
+		twitchName = v.TwitchName
+	case user.RealUser:
+		mxid = v.Mxid
+		twitchName = v.TwitchName
+		twitchToken = v.TwitchToken
+	case user.BotUser:
+		mxid = v.Mxid
+		twitchName = v.TwitchName
+		twitchToken = v.TwitchToken
 	}
-	tx.Commit()
-	return nil
-}
 
-func SaveBotUser(user *user.BotUser) error {
-	db := Open()
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	stmt, err := tx.Prepare("INSERT INTO users (type, mxid, twitch_name, twitch_token) VALUES (?, ?, ?, ?)")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	mxid := user.Mxid
-	twitchName := user.TwitchName
-	twitchToken := user.TwitchToken
-
-	_, err = stmt.Exec("BOT", mxid, twitchName, twitchToken)
+	_, err = stmt.Exec(Type, mxid, twitchName, twitchToken)
 	if err != nil {
 		return err
 	}
@@ -109,6 +76,32 @@ func getUsers() (users *UserTransportStruct, err error) {
 				TwitchName: twitchName,
 			}
 			transportStruct.ASUsers = append(transportStruct.ASUsers, ASUser)
+		case "REAL":
+			ws, err := twitch.Connect(twitchToken, twitchName)
+			if err != nil {
+				return nil, err
+			}
+
+			RealUser := &user.RealUser{
+				Mxid:        mxid,
+				TwitchToken: twitchToken,
+				TwitchName:  twitchName,
+				TwitchWS:    ws,
+			}
+			transportStruct.RealUsers = append(transportStruct.RealUsers, RealUser)
+		case "BOT":
+			ws, err := twitch.Connect(twitchToken, twitchName)
+			if err != nil {
+				return nil, err
+			}
+
+			BotUser := &user.BotUser{
+				Mxid:        mxid,
+				TwitchToken: twitchToken,
+				TwitchName:  twitchName,
+				TwitchWS:    ws,
+			}
+			transportStruct.BotUsers = append(transportStruct.BotUsers, BotUser)
 		}
 	}
 

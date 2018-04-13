@@ -5,6 +5,9 @@ This is an Twitch bridge for Matrix using the Application Services (AS) API.
 This bridge will pass all TwitchChannel messages through to Matrix,
 and all Matrix messages through to the Twitch Channel.
 
+## How to reach the owner
+[MATRIX ROOM: #twitch-puppet-bridge:matrix.ffslfl.net](https://matrix.to/#/#twitch-puppet-bridge:matrix.ffslfl.net)
+
 ## Setup
 
 ### 1. Installation

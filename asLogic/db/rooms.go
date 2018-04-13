@@ -4,6 +4,7 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
 )
 
+// SaveRoom saves a room.Room{} struct to the Database
 func SaveRoom(Room *room.Room) error {
 	db := Open()
 	tx, err := db.Begin()
@@ -28,6 +29,7 @@ func SaveRoom(Room *room.Room) error {
 	return nil
 }
 
+// GetRooms returns all saved Rooms from the DB mapped by the alias
 func GetRooms() (rooms map[string]*room.Room, err error) {
 	rooms = make(map[string]*room.Room)
 	db := Open()

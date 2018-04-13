@@ -9,6 +9,7 @@ import (
 var dbOnce sync.Once
 var db *sql.DB
 
+// Init prepares the DBby opening it and creating the required tables if needed
 func Init() (err error) {
 	dbOnce.Do(func() {
 		db, err = sql.Open("sqlite3", util.DbFile)
@@ -20,6 +21,7 @@ func Init() (err error) {
 	return
 }
 
+// Open returns the in Init() created db variable
 func Open() *sql.DB {
 	if db != nil {
 		return db

@@ -5,12 +5,15 @@ import (
 	"github.com/matrix-org/gomatrix"
 )
 
+// ASUser contains the required Information for a User managed by the Appservice and holds a Matrix Client
 type ASUser struct {
 	Mxid       string
 	TwitchName string
 	MXClient   *gomatrix.Client
 }
 
+// RealUser contains the required Information for a Real User
+// and holds a Matrix Client as well as a Websocket for twitch that allows to send messages to twitch
 type RealUser struct {
 	Mxid        string
 	TwitchName  string
@@ -18,6 +21,8 @@ type RealUser struct {
 	TwitchWS    *websocket.Conn
 }
 
+// BotUser contains the required Information for a Bot User
+// and holds a Matrix Client as well as a Websocket for twitch that listens to the Channels
 type BotUser struct {
 	Mxid        string
 	TwitchName  string

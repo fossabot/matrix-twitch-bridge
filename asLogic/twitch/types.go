@@ -3,7 +3,7 @@ package twitch
 import "time"
 
 // UserJson defines the json for the `https://api.twitch.tv/kraken/users?login=<username>`
-type UserJson struct {
+type UserJSON struct {
 	Total int `json:"_total"`
 	Users []struct {
 		DisplayName string      `json:"display_name"`

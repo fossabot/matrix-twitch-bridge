@@ -7,6 +7,7 @@ import (
 	"github.com/matrix-org/gomatrix"
 )
 
+// SaveUser saves a User struct to the Database
 func SaveUser(userA interface{}, Type string) error {
 	db := Open()
 	tx, err := db.Begin()
@@ -44,14 +45,14 @@ func SaveUser(userA interface{}, Type string) error {
 	return nil
 }
 
-type UserTransportStruct struct {
+type userTransportStruct struct {
 	ASUsers   []*user.ASUser
 	RealUsers []*user.RealUser
 	BotUsers  []*user.BotUser
 }
 
-func getUsers() (users *UserTransportStruct, err error) {
-	transportStruct := &UserTransportStruct{}
+func getUsers() (users *userTransportStruct, err error) {
+	transportStruct := &userTransportStruct{}
 	db := Open()
 	rows, err := db.Query("SELECT type, mxid, twitch_name, twitch_token FROM users")
 	if err != nil {
@@ -110,6 +111,7 @@ func getUsers() (users *UserTransportStruct, err error) {
 	return transportStruct, err
 }
 
+// GetASUsers returns all Users of type AS mapped by the MXID
 func GetASUsers() (map[string]*user.ASUser, error) {
 	ASMap := make(map[string]*user.ASUser)
 	dbResp, err := getUsers()
@@ -131,6 +133,7 @@ func GetASUsers() (map[string]*user.ASUser, error) {
 	return ASMap, nil
 }
 
+// GetTwitchUsers returns all Users of type AS mapped by the Twitch Channel Name
 func GetTwitchUsers() (map[string]*user.ASUser, error) {
 	TwitchMap := make(map[string]*user.ASUser)
 
@@ -153,6 +156,7 @@ func GetTwitchUsers() (map[string]*user.ASUser, error) {
 	return TwitchMap, nil
 }
 
+// GetRealUsers returns all Users of type REAL mapped by the MXID
 func GetRealUsers() (map[string]*user.RealUser, error) {
 	RealMap := make(map[string]*user.RealUser)
 

@@ -8,8 +8,9 @@ import (
 	"time"
 )
 
-func RequestUserData(username string) (*UserJson, error) {
-	u := &UserJson{}
+// RequestUserData returns a Struct of User Information from twitch like the topic or display name
+func RequestUserData(username string) (*UserJSON, error) {
+	u := &UserJSON{}
 	var httpCLient = &http.Client{
 		Timeout: time.Second * 10,
 	}
@@ -35,6 +36,7 @@ func RequestUserData(username string) (*UserJson, error) {
 	return u, err
 }
 
+// CheckTwitchUser makes a request to the TwitchAPI to check if a channel exists or not
 func CheckTwitchUser(username string) (bool, error) {
 	u, err := RequestUserData(username)
 	if err != nil {

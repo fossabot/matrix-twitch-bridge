@@ -12,12 +12,15 @@ import (
 	"time"
 )
 
+// Connect opens a Websocket and requests the needed Capabilities and does the Login
 func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
 	// Make sure to catch the Interrupt Signal to close the WS gracefully
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	util.Done = make(chan struct{})
+	if util.Done == nil {
+		util.Done = make(chan struct{})
+	}
 
 	dialer := websocket.DefaultDialer
 	WS, _, err = dialer.Dial("wss://irc-ws.chat.twitch.tv:443/irc", nil)
@@ -50,6 +53,7 @@ func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
 	return
 }
 
+// Listen answers to the PING messages by Twitch and relays messages to Matrix
 func Listen(users map[string]*user.ASUser, rooms map[string]string) {
 	go func() {
 		defer close(util.Done)

@@ -15,6 +15,7 @@ import (
 	"strings"
 )
 
+// Init starts the interactive Config generator and exits
 func Init() {
 	var boldGreen = color.New(color.FgGreen).Add(color.Bold)
 	appservice.GenerateRegistration("twitch", "twitch", true, true)
@@ -62,6 +63,7 @@ func prepareRun() error {
 	return nil
 }
 
+// Run starts the actual Appservice to let it listen to both ends
 func Run() error {
 	err := prepareRun()
 	if err != nil {
@@ -100,9 +102,9 @@ func Run() error {
 			}
 		}
 	}
-	return nil
 }
 
+// QueryHandler implements the interface appservice.QueryHandler{}
 type QueryHandler struct {
 	users       map[string]*user.ASUser
 	aliases     map[string]*room.Room
@@ -148,6 +150,8 @@ func createUser(client *gomatrix.Client, username string) error {
 	return nil
 }
 
+// QueryAlias is the logic that creates if needed a AS managed matrix room
+// and tells the Homeserver if that room alias is managed by the AS
 func (q QueryHandler) QueryAlias(alias string) bool {
 	if q.aliases[alias] != nil {
 		return true
@@ -210,6 +214,8 @@ type registerAuth struct {
 	Type string `json:"type"`
 }
 
+// QueryUser is the logic that creates if needed a AS managed user
+// and tells the Homeserver if that userID is managed by the AS
 func (q QueryHandler) QueryUser(userID string) bool {
 	if q.users[userID] != nil {
 		return true

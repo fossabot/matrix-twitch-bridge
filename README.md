@@ -35,10 +35,10 @@ and how to bridge Twitch channels/users.
 Finally, the bridge can be run using the following command:
 
 ```bash
-matrix-twitch-bridge --client_id=<client_id from your Twitch APP>
+matrix-twitch-bridge --client_id=<client_id from your Twitch App>
 ```
 
-If you have changed the default config location add the `--condig`
+If you have changed the default config location add the `--config`
 (or `-c`) flag to the above command.
 
 If you want to change the DB location add the `--database`

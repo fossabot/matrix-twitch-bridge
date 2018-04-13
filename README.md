@@ -49,12 +49,16 @@ Two-Way communication in channels and PMs are supported.
 The Matrix users require to login first on Twitch before wrinting in Portal Rooms
 
 # Usage
+
 To join a channel on Twitc:
+
  - Join a room with the alias ``#<alias_prefix><channel_name>:<homeserver_hosting_the_appservice>`` e.g. ``#twitch_hc_dizee:example.com``. The template for this can be configured using the interactive config generator.
 
 To send a Whisper to someone on Twitch:
+
  - Start a conversation with a user ID ``@<user_prefix><channel_name>:<homeserver_hosting_the_appservice>`` e.g.
    ``@twitch_hc_dizee:example.com``. The template for this can be configured using the interactive config generator.
 
 # Contributing
+
 Please see the [CONTRIBUTING](CONTRIBUTING.md) file for information on contributing.

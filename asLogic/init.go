@@ -18,7 +18,7 @@ import (
 func Init() {
 	var boldGreen = color.New(color.FgGreen).Add(color.Bold)
 	appservice.GenerateRegistration("twitch", "twitch", true, true)
-	boldGreen.Println("Please restart the Appservice with \"--config\" and \"--client_id\"-flag applied")
+	boldGreen.Println("Please restart the Twitch-Appservice with \"--client_id\"-flag applied")
 }
 
 var realUsers map[string]*user.RealUser

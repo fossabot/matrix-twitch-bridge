@@ -36,7 +36,7 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		if util.CfgFile == "" {
+		if _, err := os.Stat(util.CfgFile); os.IsNotExist(err) {
 			asLogic.Init()
 		} else {
 			asLogic.Run()
@@ -54,7 +54,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&util.CfgFile, "config", "./config.yaml", "config file (default is ./config.yaml . It will get generated if no value is given)")
-	rootCmd.PersistentFlags().StringVar(&util.DbFile, "db", "./twitch.db", "db file where data gets saved/cached to (default is ./twitch.db .  It will get generated if no value is given)")
+	rootCmd.PersistentFlags().StringVarP(&util.CfgFile, "config", "c", "./config.yaml", "config file (default is ./config.yaml . It will get generated if no value is given)")
+	rootCmd.PersistentFlags().StringVarP(&util.DbFile, "database", "db", "./twitch.db", "db file where data gets saved/cached to (default is ./twitch.db .  It will get generated if no value is given)")
 	rootCmd.PersistentFlags().StringVar(&util.ClientID, "client_id", "", "ClientID of the registered Twitch App")
 }

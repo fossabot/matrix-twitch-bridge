@@ -2,10 +2,9 @@ package twitch
 
 import (
 	"fmt"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
-	"github.com/Nordgedanken/matrix-twitch-bridge/queryHandler"
 	"github.com/gorilla/websocket"
-	"log"
 	"os"
 	"os/signal"
 	"strings"
@@ -54,27 +53,27 @@ func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
 }
 
 // Listen answers to the PING messages by Twitch and relays messages to Matrix
-func Listen() {
+func Listen(users map[string]*user.ASUser, rooms map[string]string) {
 	go func() {
 		defer close(util.Done)
 		for {
-			_, message, err := util.WS.ReadMessage()
+			_, message, err := util.BotUser.TwitchWS.ReadMessage()
 			if err != nil {
-				log.Println("[Error]", err)
+				util.Config.Log.Errorln("[Error]", err)
 				return
 			}
 			parsedMessage := parseMessage(fmt.Sprintf("%s", message))
 			if parsedMessage != nil {
 				switch parsedMessage.Command {
 				case "PRIVMSG":
-					room := queryHandler.QueryHandler().TwitchRooms[parsedMessage.Channel]
-					queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username].MXClient.SendText(room, parsedMessage.Message)
+					room := rooms[parsedMessage.Channel]
+					users[parsedMessage.Username].MXClient.SendText(room, parsedMessage.Message)
 				case "PING":
 					util.WS.WriteControl(websocket.PongMessage, []byte(""), time.Now().Add(10*time.Second))
 				}
 			}
 
-			log.Printf("recv: %s", message)
+			util.Config.Log.Infof("recv: %s\n", message)
 		}
 	}()
 }

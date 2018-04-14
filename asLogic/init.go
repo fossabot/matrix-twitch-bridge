@@ -2,11 +2,11 @@ package asLogic
 
 import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/login"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
-	"github.com/Nordgedanken/matrix-twitch-bridge/queryHandler"
 	"github.com/fatih/color"
 	"github.com/gorilla/mux"
 	"log"
@@ -53,8 +53,16 @@ func prepareRun() error {
 		return err
 	}
 
+	util.BotUser, err = db.GetBotUser()
+	if err != nil {
+		return err
+	}
+
+	twitch.Listen(queryHandler.QueryHandler().TwitchUsers, queryHandler.QueryHandler().TwitchRooms)
+
 	util.Config.Init(qHandler)
 
+	// Todo Start the Server for the callback endpoint!
 	r := mux.NewRouter()
 	r.HandleFunc("/callback", login.Callback).Methods(http.MethodPut)
 

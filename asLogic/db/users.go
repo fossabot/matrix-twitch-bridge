@@ -172,3 +172,12 @@ func GetRealUsers() (map[string]*user.RealUser, error) {
 
 	return RealMap, nil
 }
+
+// GetBotUser returns all Users of type BOT
+func GetBotUser() (*user.BotUser, error) {
+	dbResp, err := getUsers()
+	if err != nil {
+		return nil, err
+	}
+	return dbResp.BotUsers[0], nil
+}

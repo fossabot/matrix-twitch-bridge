@@ -4,7 +4,7 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/api"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/matrix-org/gomatrix"
@@ -58,7 +58,7 @@ func (q queryHandler) QueryAlias(alias string) bool {
 		}
 		if r.MatchString(alias) {
 			tUsername := r.FindStringSubmatch(alias)[0]
-			userdata, err := twitch.RequestUserData(tUsername)
+			userdata, err := api.RequestUserData(tUsername)
 			if err != nil {
 				util.Config.Log.Errorln(err)
 				return false
@@ -112,7 +112,7 @@ func (q queryHandler) QueryUser(userID string) bool {
 		}
 	}
 
-	check, err := twitch.CheckTwitchUser(tUsername)
+	check, err := api.CheckTwitchUser(tUsername)
 	if err != nil {
 		util.Config.Log.Errorln(err)
 		return false
@@ -137,7 +137,7 @@ func (q queryHandler) QueryUser(userID string) bool {
 	}
 
 	client.AppServiceUserID = userID
-	userdata, err := twitch.RequestUserData(tUsername)
+	userdata, err := api.RequestUserData(tUsername)
 	if err != nil {
 		util.Config.Log.Errorln(err)
 		return false

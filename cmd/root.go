@@ -54,5 +54,6 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&util.CfgFile, "config", "c", "./config.yaml", "config file (default is ./config.yaml . It will get generated if no value is given)")
 	rootCmd.PersistentFlags().StringVarP(&util.DbFile, "database", "db", "./twitch.db", "db file where data gets saved/cached to (default is ./twitch.db .  It will get generated if no value is given)")
-	rootCmd.PersistentFlags().StringVar(&util.ClientID, "client_id", "", "ClientID of the registered Twitch App")
+	rootCmd.PersistentFlags().StringVar(&util.ClientID, "client_id", "", "client_id of the registered Twitch App")
+	rootCmd.PersistentFlags().StringVar(&util.ClientSecret, "client_secret", "", "client_secret of the registered Twitch App")
 }

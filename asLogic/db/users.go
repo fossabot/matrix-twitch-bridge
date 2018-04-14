@@ -30,7 +30,8 @@ func SaveUser(userA interface{}, Type string) error {
 	case user.RealUser:
 		mxid = v.Mxid
 		twitchName = v.TwitchName
-		twitchToken = v.TwitchToken
+		// TODO REWRITE
+		//twitchToken = v.TwitchToken
 	case user.BotUser:
 		mxid = v.Mxid
 		twitchName = v.TwitchName
@@ -84,10 +85,11 @@ func getUsers() (users *userTransportStruct, err error) {
 			}
 
 			RealUser := &user.RealUser{
-				Mxid:        mxid,
-				TwitchToken: twitchToken,
-				TwitchName:  twitchName,
-				TwitchWS:    ws,
+				Mxid: mxid,
+				// TODO REWRITE
+				//TwitchToken: twitchToken,
+				TwitchName: twitchName,
+				TwitchWS:   ws,
 			}
 			transportStruct.RealUsers = append(transportStruct.RealUsers, RealUser)
 		case "BOT":

@@ -16,7 +16,7 @@ import (
 
 var conf *oauth2.Config
 
-func SendLoginURL(ruser user.RealUser) error {
+func SendLoginURL(ruser *user.RealUser) error {
 	if conf == nil {
 		conf = &oauth2.Config{
 			ClientID:     util.ClientID,

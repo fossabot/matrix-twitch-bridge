@@ -9,7 +9,6 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/fatih/color"
 	"github.com/gorilla/mux"
-	"log"
 	"maunium.net/go/mautrix-appservice-go"
 	"net/http"
 )
@@ -100,14 +99,14 @@ func Run() error {
 					mxUser = &user.RealUser{}
 					mxUser.Mxid = event.SenderID
 					db.SaveUser(mxUser, "REAL")
-					// TODO Implement Auth logic and Queue the message for later!
+					login.SendLoginURL(mxUser)
 					continue
 				}
 				if mxUser.TwitchWS == nil {
 					if mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
 						mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
 						if err != nil {
-							log.Println("[ERROR]: ", err)
+							util.Config.Log.Errorln(err)
 							continue
 						}
 					}

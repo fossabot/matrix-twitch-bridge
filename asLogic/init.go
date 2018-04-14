@@ -1,6 +1,7 @@
 package asLogic
 
 import (
+	"fmt"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
@@ -11,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"maunium.net/go/mautrix-appservice-go"
 	"net/http"
+	"os"
 )
 
 // Init starts the interactive Config generator and exits
@@ -60,18 +62,23 @@ func prepareRun() error {
 		return err
 	}
 
-	util.BotUser.TwitchWS, err = twitch.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
-	if err != nil {
-		return err
-	}
-
-	twitch.Listen(queryHandler.QueryHandler().TwitchUsers, queryHandler.QueryHandler().TwitchRooms)
-
 	util.Config.Init(qHandler)
 
-	// Todo Start the Server for the callback endpoint!
 	r := mux.NewRouter()
-	r.HandleFunc("/callback", login.Callback).Methods(http.MethodPut)
+	r.HandleFunc("/callback", login.Callback).Methods(http.MethodGet)
+
+	go func() {
+		var err error
+		if len(util.TLSCert) == 0 || len(util.TLSKey) == 0 {
+			err = fmt.Errorf("You need to have a SSL Cert!")
+		} else {
+			err = http.ListenAndServeTLS(util.Publicaddress, util.TLSCert, util.TLSKey, r)
+		}
+		if err != nil {
+			util.Config.Log.Fatalln("Error while listening:", err)
+			os.Exit(1)
+		}
+	}()
 
 	util.Config.Listen()
 
@@ -85,11 +92,12 @@ func Run() error {
 		return err
 	}
 
-	//TODO INIT ROOM BRIDGES
-	//TOKEN NEEDS TO BE A BOT
-	//USERNAME NEEDS TO BE A BOT
-	//twitch.Connect(token, username)
-	//twitch.Listen(queryHandler.QueryHandler().TwitchUsers, queryHandler.QueryHandler().TwitchRooms)
+	util.BotUser.TwitchWS, err = twitch.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
+	if err != nil {
+		return err
+	}
+
+	twitch.Listen(queryHandler.QueryHandler().TwitchUsers, queryHandler.QueryHandler().TwitchRooms)
 
 	for {
 		select {

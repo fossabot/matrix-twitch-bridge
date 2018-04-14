@@ -58,4 +58,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&util.ClientSecret, "client_secret", "", "client_secret of the registered Twitch App")
 	rootCmd.PersistentFlags().StringVar(&util.BotAToken, "bot_accessToken", "", "accessToken of the Twitch Bot User. You can aquire this by opening https://twitchapps.com/tmi and removing \"oauth:\" at the front")
 	rootCmd.PersistentFlags().StringVar(&util.BotUName, "bot_username", "", "username of the Twitch Bot User.")
+	rootCmd.PersistentFlags().StringVarP(&util.Publicaddress, "public_address", "pa", "", "Address of the Public Listening HTTP Server (used for the Twitch Callback)")
+	rootCmd.PersistentFlags().StringVarP(&util.TLSCert, "tls_cert", "tc", "", "Path to TLS Cert File.")
+	rootCmd.PersistentFlags().StringVarP(&util.TLSKey, "tls_key", "tk", "", "Path to TLS Key File.")
 }

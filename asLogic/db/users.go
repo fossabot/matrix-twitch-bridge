@@ -1,11 +1,14 @@
 package db
 
 import (
+	"database/sql"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/matrix-org/gomatrix"
+	"golang.org/x/oauth2"
+	"time"
 )
 
 // SaveUser saves a User struct to the Database
@@ -15,7 +18,7 @@ func SaveUser(userA interface{}, Type string) error {
 	if err != nil {
 		return err
 	}
-	stmt, err := tx.Prepare("INSERT INTO users (type, mxid, twitch_name, twitch_token) VALUES (?, ?, ?, ?)")
+	stmt, err := tx.Prepare("INSERT INTO users (type, mxid, twitch_name, twitch_token, twitch_token_id) VALUES (?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
@@ -23,6 +26,7 @@ func SaveUser(userA interface{}, Type string) error {
 	var mxid string
 	var twitchName string
 	var twitchToken string
+	var twitch_token_id int64
 
 	switch v := userA.(type) {
 	case user.ASUser:
@@ -31,15 +35,27 @@ func SaveUser(userA interface{}, Type string) error {
 	case user.RealUser:
 		mxid = v.Mxid
 		twitchName = v.TwitchName
-		// TODO REWRITE
-		//twitchToken = v.TwitchToken
+		if v.TwitchTokenStruct != nil {
+			expiry, err := v.TwitchTokenStruct.Expiry.MarshalText()
+			if err != nil {
+				return err
+			}
+			tokenResp, err := tx.Exec("INSERT INTO tokens (access_token, token_type, refresh_token, expiry) VALUES (?, ?, ?, ?)", v.TwitchTokenStruct.AccessToken, v.TwitchTokenStruct.Type(), v.TwitchTokenStruct.RefreshToken, string(expiry[:]))
+			if err != nil {
+				return err
+			}
+			twitch_token_id, err = tokenResp.LastInsertId()
+			if err != nil {
+				return err
+			}
+		}
 	case user.BotUser:
 		mxid = v.Mxid
 		twitchName = v.TwitchName
 		twitchToken = v.TwitchToken
 	}
 
-	_, err = stmt.Exec(Type, mxid, twitchName, twitchToken)
+	_, err = stmt.Exec(Type, mxid, twitchName, twitchToken, twitch_token_id)
 	if err != nil {
 		return err
 	}
@@ -56,7 +72,7 @@ type userTransportStruct struct {
 func getUsers() (users *userTransportStruct, err error) {
 	transportStruct := &userTransportStruct{}
 	db := Open()
-	rows, err := db.Query("SELECT type, mxid, twitch_name, twitch_token FROM users")
+	rows, err := db.Query("SELECT type, mxid, twitch_name, twitch_token, twitch_token_id FROM users")
 	if err != nil {
 		return nil, err
 	}
@@ -66,8 +82,9 @@ func getUsers() (users *userTransportStruct, err error) {
 		var Type string
 		var mxid string
 		var twitchName string
-		var twitchToken string
-		err = rows.Scan(&Type, &mxid, &twitchName, &twitchToken)
+		var twitchToken sql.NullString
+		var twitchTokenID sql.NullString
+		err = rows.Scan(&Type, &mxid, &twitchName, &twitchToken, &twitchTokenID)
 		if err != nil {
 			return nil, err
 		}
@@ -80,7 +97,28 @@ func getUsers() (users *userTransportStruct, err error) {
 			}
 			transportStruct.ASUsers = append(transportStruct.ASUsers, ASUser)
 		case "REAL":
-			ws, err := twitch.Connect(twitchToken, twitchName)
+			var TwitchToken oauth2.Token
+			if twitchTokenID.Valid {
+				var accessToken string
+				var tokenType string
+				var refreshToken string
+				var expiry string
+				expiryTime := time.Time{}
+				db.QueryRow("SELECT access_token, token_type, refresh_token, expiry FROM tokens WHERE id = "+twitchTokenID.String, &accessToken, &tokenType, &refreshToken, &expiry)
+
+				err = expiryTime.UnmarshalText([]byte(expiry))
+				if err != nil {
+					return nil, err
+				}
+
+				TwitchToken = oauth2.Token{
+					AccessToken:  accessToken,
+					TokenType:    tokenType,
+					RefreshToken: refreshToken,
+					Expiry:       expiryTime,
+				}
+			}
+			ws, err := twitch.Connect(TwitchToken.AccessToken, twitchName)
 			if err != nil {
 				return nil, err
 			}
@@ -92,16 +130,22 @@ func getUsers() (users *userTransportStruct, err error) {
 				TwitchName: twitchName,
 				TwitchWS:   ws,
 			}
+
 			transportStruct.RealUsers = append(transportStruct.RealUsers, RealUser)
 		case "BOT":
-			ws, err := twitch.Connect(twitchToken, twitchName)
+			var TwitchToken string
+			if twitchToken.Valid {
+				TwitchToken = twitchToken.String
+			}
+
+			ws, err := twitch.Connect(TwitchToken, twitchName)
 			if err != nil {
 				return nil, err
 			}
 
 			BotUser := &user.BotUser{
 				Mxid:        mxid,
-				TwitchToken: twitchToken,
+				TwitchToken: TwitchToken,
 				TwitchName:  twitchName,
 				TwitchWS:    ws,
 			}

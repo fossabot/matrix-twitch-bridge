@@ -49,7 +49,6 @@ func (q queryHandler) QueryAlias(alias string) bool {
 
 	var displayname string
 	var logoURL string
-	// TODO Get actual Name
 	for _, v := range util.Config.Registration.Namespaces.RoomAliases {
 		r, err := regexp.Compile(v.Regex)
 		if err != nil {

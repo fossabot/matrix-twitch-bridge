@@ -30,6 +30,12 @@ var ClientID string
 // ClientSecret holds the client_secret of the Twitch App needed to use the API as well as generate Login URLs
 var ClientSecret string
 
+var TLSCert string
+
+var TLSKey string
+
+var Publicaddress string
+
 // TMessage is a struct with information about a Message send by Twitch
 type TMessage struct {
 	Message  string

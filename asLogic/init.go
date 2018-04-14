@@ -29,13 +29,16 @@ func prepareRun() error {
 	}
 
 	qHandler := queryHandler.QueryHandler()
-	qHandler.Aliases, err = db.GetRooms()
+
+	qHandler.TwitchRooms, err = db.GetTwitchRooms()
 	if err != nil {
 		return err
 	}
 
-	// TODO Make sure to load them from a DB!!!!
-	qHandler.TwitchRooms = make(map[string]string)
+	qHandler.Aliases, err = db.GetRooms()
+	if err != nil {
+		return err
+	}
 
 	qHandler.TwitchUsers, err = db.GetTwitchUsers()
 	if err != nil {

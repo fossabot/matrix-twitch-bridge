@@ -63,3 +63,18 @@ func GetRooms() (rooms map[string]*room.Room, err error) {
 	}
 	return rooms, nil
 }
+
+func GetTwitchRooms() (rooms map[string]string, err error) {
+	nrooms, err := GetRooms()
+	if err != nil {
+		return nil, err
+	}
+
+	rooms = make(map[string]string)
+
+	for _, v := range nrooms {
+		rooms[v.TwitchChannel] = v.ID
+	}
+
+	return rooms, nil
+}

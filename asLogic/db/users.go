@@ -1,6 +1,7 @@
 package db
 
 import (
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
@@ -179,5 +180,37 @@ func GetBotUser() (*user.BotUser, error) {
 	if err != nil {
 		return nil, err
 	}
-	return dbResp.BotUsers[0], nil
+	if len(dbResp.BotUsers) >= 1 {
+		bot := dbResp.BotUsers[0]
+
+		client, err := gomatrix.NewClient(util.Config.HomeserverURL, bot.Mxid, util.Config.Registration.AppToken)
+		if err != nil {
+			return nil, err
+		}
+
+		bot.MXClient = client
+
+		return bot, nil
+	}
+	var userID = "@appservice-twitch:" + util.Config.HomeserverURL
+	botUser := &user.BotUser{
+		Mxid:        userID,
+		TwitchName:  util.BotUName,
+		TwitchToken: util.BotAToken,
+	}
+
+	client, err := gomatrix.NewClient(util.Config.HomeserverURL, userID, util.Config.Registration.AppToken)
+	if err != nil {
+		return nil, err
+	}
+	err = matrix_helper.CreateUser(client, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	botUser.MXClient = client
+
+	SaveUser(botUser, "BOT")
+
+	return botUser, nil
 }

@@ -58,6 +58,11 @@ func prepareRun() error {
 		return err
 	}
 
+	util.BotUser.TwitchWS, err = twitch.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
+	if err != nil {
+		return err
+	}
+
 	twitch.Listen(queryHandler.QueryHandler().TwitchUsers, queryHandler.QueryHandler().TwitchRooms)
 
 	util.Config.Init(qHandler)

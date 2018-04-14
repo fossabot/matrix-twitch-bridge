@@ -56,4 +56,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&util.DbFile, "database", "db", "./twitch.db", "db file where data gets saved/cached to (default is ./twitch.db .  It will get generated if no value is given)")
 	rootCmd.PersistentFlags().StringVar(&util.ClientID, "client_id", "", "client_id of the registered Twitch App")
 	rootCmd.PersistentFlags().StringVar(&util.ClientSecret, "client_secret", "", "client_secret of the registered Twitch App")
+	rootCmd.PersistentFlags().StringVar(&util.BotAToken, "bot_accessToken", "", "accessToken of the Twitch Bot User. You can aquire this by opening https://twitchapps.com/tmi and removing \"oauth:\" at the front")
+	rootCmd.PersistentFlags().StringVar(&util.BotUName, "bot_username", "", "username of the Twitch Bot User.")
 }

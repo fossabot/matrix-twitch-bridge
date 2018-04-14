@@ -2,7 +2,6 @@ package util
 
 import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
-	"github.com/gorilla/websocket"
 	"maunium.net/go/mautrix-appservice-go"
 )
 
@@ -12,8 +11,9 @@ var Config *appservice.Config
 // BotUser exposes the Bot User to the complete go code
 var BotUser *user.BotUser
 
-// WS holds the main listen Websocket
-var WS *websocket.Conn
+var BotAToken string
+
+var BotUName string
 
 // Done is used to gracefully exit all WS connections
 var Done chan struct{}

@@ -57,6 +57,7 @@ func (q queryHandler) QueryAlias(alias string) bool {
 		}
 		if r.MatchString(alias) {
 			tUsername := r.FindStringSubmatch(alias)[0]
+			util.Config.Log.Debugln("tUsername: ", tUsername)
 			userdata, err := api.RequestUserData(tUsername)
 			if err != nil {
 				util.Config.Log.Errorln(err)

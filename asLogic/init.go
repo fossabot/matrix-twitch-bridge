@@ -164,11 +164,18 @@ func Run() error {
 func useEvent(event appservice.Event) error {
 	qHandler := queryHandler.QueryHandler()
 	mxUser := qHandler.RealUsers[event.SenderID]
+
+	util.Config.Log.Infoln("Processing Event")
+
 	if mxUser == nil {
+		util.Config.Log.Debugln("Creating new User")
+
 		qHandler.RealUsers[event.SenderID] = &user.RealUser{}
 		mxUser := qHandler.RealUsers[event.SenderID]
 		mxUser.Mxid = event.SenderID
 		mxUser.TwitchTokenStruct = nil
+
+		util.Config.Log.Debugln("Let new User Login")
 		err := login.SendLoginURL(mxUser)
 		if err != nil {
 			return err
@@ -176,37 +183,43 @@ func useEvent(event appservice.Event) error {
 		db.SaveUser(mxUser)
 		return nil
 	} else if mxUser.TwitchTokenStruct == nil {
+		util.Config.Log.Debugln("Let new User Login (he already exists)")
 		err := login.SendLoginURL(mxUser)
 		if err != nil {
 			return err
 		}
 	}
+	util.Config.Log.Debugln("Check if we have all data needed for twitch")
 	if mxUser.TwitchTokenStruct != nil && mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
+		util.Config.Log.Debugln("Check if we have already a open WS")
 		if mxUser.TwitchWS == nil {
 			var err error
-			mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
-			if err != nil {
-				return err
-			}
-		} else {
-			var err error
+
+			util.Config.Log.Debugln("Connect new WS to Twitch")
 			mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
 			if err != nil {
 				return err
 			}
 		}
+
+		util.Config.Log.Debugln("Check if Room of event is known")
 		for _, v := range qHandler.Aliases {
 			if v.ID == event.RoomID {
+
+				util.Config.Log.Debugln("Join Twitch Channel")
 				err := twitch.Join(mxUser.TwitchWS, v.TwitchChannel)
 				if err != nil {
 					return err
 				}
+				util.Config.Log.Debugln("Check if text or other Media")
 				if event.Content["msgtype"] == "m.text" {
+					util.Config.Log.Debugln("Send message to twitch")
 					err = twitch.Send(mxUser.TwitchWS, v.TwitchChannel, event.Content["body"].(string))
 					if err != nil {
 						return err
 					}
 				} else {
+					util.Config.Log.Debugln("Send message to bridge Room to tell user to use plain text")
 					resp, err := util.BotUser.MXClient.GetDisplayName(event.SenderID)
 					if err != nil {
 						return err

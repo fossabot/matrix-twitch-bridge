@@ -86,7 +86,7 @@ func (q queryHandler) QueryAlias(alias string) bool {
 	if err != nil {
 		util.Config.Log.Errorln(err)
 	}
-	return false
+	return true
 }
 
 // QueryUser is the logic that creates if needed a AS managed user

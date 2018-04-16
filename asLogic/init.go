@@ -103,9 +103,6 @@ func prepareRun() error {
 		}
 	}()
 
-	util.Config.Log.Infoln("Starting Appservice Server...")
-	util.Config.Listen()
-
 	return nil
 }
 
@@ -131,10 +128,15 @@ func Run() error {
 			return err
 		}
 	}
+
+	util.Config.Log.Infoln("Starting Appservice Server...")
+	util.Config.Listen()
+
 	go func() {
 		for {
 			select {
 			case event := <-util.Config.Events:
+				util.Config.Log.Debugln("Got Event")
 				switch event.Type {
 				case "m.room.message":
 					qHandler := queryHandler.QueryHandler()

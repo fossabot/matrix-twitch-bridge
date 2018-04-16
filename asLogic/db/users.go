@@ -56,20 +56,11 @@ func SaveUser(userA interface{}, Type string) error {
 			}
 		}
 	case *user.BotUser:
-		util.Config.Log.Debugln("mxid: ", v.Mxid)
-		util.Config.Log.Debugln("twitchName: ", v.TwitchName)
-		util.Config.Log.Debugln("twitchToken: ", v.TwitchToken)
 		mxid = v.Mxid
 		twitchName = v.TwitchName
 		twitchToken = v.TwitchToken
 	}
 
-	util.Config.Log.Debugln("Inserting DATA")
-	util.Config.Log.Debugln("Type:", Type)
-	util.Config.Log.Debugln("mxid: ", mxid)
-	util.Config.Log.Debugln("twitchName: ", twitchName)
-	util.Config.Log.Debugln("twitchToken: ", twitchToken)
-	util.Config.Log.Debugln("twitch_token_id: ", twitch_token_id)
 	_, err = stmt.Exec(Type, mxid, twitchName, twitchToken, twitch_token_id)
 	if err != nil {
 		return err

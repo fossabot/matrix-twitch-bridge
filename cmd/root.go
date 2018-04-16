@@ -35,7 +35,8 @@ var rootCmd = &cobra.Command{
 		if _, err := os.Stat(util.CfgFile); os.IsNotExist(err) {
 			asLogic.Init()
 		} else {
-			asLogic.Run()
+			err = asLogic.Run()
+			log.Fatalln(err)
 		}
 	},
 }

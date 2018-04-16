@@ -19,6 +19,8 @@ func CreateUser(client *gomatrix.Client, username string) error {
 	}
 
 	util.Config.Log.Debugln("Starting Register")
+	util.Config.Log.Debugf("registerReq: %+v", registerReq)
+	util.Config.Log.Debugf("client: %+v", client)
 	register, inter, err := client.Register(&registerReq)
 	if err != nil {
 		return err

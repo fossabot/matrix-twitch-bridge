@@ -187,6 +187,31 @@ func useEvent(event appservice.Event) error {
 			if err != nil {
 				return err
 			}
+			for _, v := range qHandler.Aliases {
+				if v.ID == event.RoomID {
+					err = twitch.Join(mxUser.TwitchWS, v.TwitchChannel)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	} else {
+		if mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
+			var err error
+			mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
+			if err != nil {
+				return err
+			}
+
+			for _, v := range qHandler.Aliases {
+				if v.ID == event.RoomID {
+					err = twitch.Join(mxUser.TwitchWS, v.TwitchChannel)
+					if err != nil {
+						return err
+					}
+				}
+			}
 		}
 	}
 	return nil

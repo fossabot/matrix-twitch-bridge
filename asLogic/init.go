@@ -116,11 +116,13 @@ func Run() error {
 		return err
 	}
 
+	util.Config.Log.Debugln("Start Connecting BotUser to Twitch")
 	util.BotUser.TwitchWS, err = twitch.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
 	if err != nil {
 		return err
 	}
 
+	util.Config.Log.Debugln("Start letting BotUser listen to Twitch")
 	twitch.Listen(queryHandler.QueryHandler().TwitchUsers, queryHandler.QueryHandler().TwitchRooms)
 
 	for v := range queryHandler.QueryHandler().TwitchRooms {
@@ -129,34 +131,36 @@ func Run() error {
 			return err
 		}
 	}
-
-	for {
-		select {
-		case event := <-util.Config.Events:
-			switch event.Type {
-			case "m.room.message":
-				qHandler := queryHandler.QueryHandler()
-				mxUser := qHandler.RealUsers[event.SenderID]
-				if mxUser == nil {
-					mxUser = &user.RealUser{}
-					mxUser.Mxid = event.SenderID
-					db.SaveUser(mxUser, "REAL")
-					login.SendLoginURL(mxUser)
-					continue
-				} else if mxUser.TwitchTokenStruct == nil {
-					login.SendLoginURL(mxUser)
-				}
-				if mxUser.TwitchWS == nil {
-					if mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
-						mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
-						if err != nil {
-							util.Config.Log.Errorln(err)
-							continue
+	go func() {
+		for {
+			select {
+			case event := <-util.Config.Events:
+				switch event.Type {
+				case "m.room.message":
+					qHandler := queryHandler.QueryHandler()
+					mxUser := qHandler.RealUsers[event.SenderID]
+					if mxUser == nil {
+						mxUser = &user.RealUser{}
+						mxUser.Mxid = event.SenderID
+						db.SaveUser(mxUser, "REAL")
+						login.SendLoginURL(mxUser)
+						continue
+					} else if mxUser.TwitchTokenStruct == nil {
+						login.SendLoginURL(mxUser)
+					}
+					if mxUser.TwitchWS == nil {
+						if mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
+							mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
+							if err != nil {
+								util.Config.Log.Errorln(err)
+								continue
+							}
 						}
 					}
-				}
 
+				}
 			}
 		}
-	}
+	}()
+	select {}
 }

@@ -88,6 +88,7 @@ func prepareRun() error {
 	}()
 
 	util.Config.Listen()
+	select {}
 
 	return nil
 }

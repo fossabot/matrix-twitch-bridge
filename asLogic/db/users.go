@@ -8,6 +8,7 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/matrix-org/gomatrix"
 	"golang.org/x/oauth2"
+	"strings"
 	"time"
 )
 
@@ -251,9 +252,9 @@ func GetBotUser() (*user.BotUser, error) {
 
 		return bot, nil
 	}
-	util.Config.Log.Debugln(util.Config.Registration.SenderLocalpart)
-	util.Config.Log.Debugln(util.Config.HomeserverDomain)
-	var userID = "@" + util.Config.Registration.SenderLocalpart + ":" + util.Config.HomeserverDomain
+
+	var localpart = strings.Replace(util.Config.Registration.Namespaces.UserIDs[0].Regex, ".+", util.Config.Registration.SenderLocalpart, -1)
+	var userID = "@" + localpart + ":" + util.Config.HomeserverDomain
 	botUser := &user.BotUser{
 		Mxid:        userID,
 		TwitchName:  util.BotUName,

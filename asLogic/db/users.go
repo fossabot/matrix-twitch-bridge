@@ -255,6 +255,7 @@ func GetBotUser() (*user.BotUser, error) {
 
 	var localpart = strings.Replace(util.Config.Registration.Namespaces.UserIDs[0].Regex, ".+", util.Config.Registration.SenderLocalpart, -1)
 	var userID = "@" + localpart + ":" + util.Config.HomeserverDomain
+	util.Config.Log.Debugln("Bot UserID: ", userID)
 	botUser := &user.BotUser{
 		Mxid:        userID,
 		TwitchName:  util.BotUName,

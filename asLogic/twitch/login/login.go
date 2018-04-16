@@ -3,6 +3,7 @@ package login
 import (
 	"context"
 	"encoding/json"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
 	twitch2 "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
@@ -102,6 +103,7 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient = conf.Client(ctx, tok)
 		queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient.Timeout = time.Second * 10
 
+		db.SaveUser(queryHandler.QueryHandler().RealUsers[state])
 		var p profile
 
 		resp, err := queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient.Get("https://api.twitch.tv/kraken/user?oauth_token=" + tok.AccessToken)

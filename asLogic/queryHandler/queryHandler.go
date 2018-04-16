@@ -152,7 +152,7 @@ func (q queryHandler) QueryUser(userID string) bool {
 	client.SetAvatarURL(resp.ContentURI)
 
 	q.Users[userID] = &asUser
-	err = db.SaveUser(q.Users[userID], "AS")
+	err = db.SaveUser(q.Users[userID])
 	if err != nil {
 		util.Config.Log.Errorln(err)
 	}

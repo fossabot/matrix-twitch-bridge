@@ -13,7 +13,7 @@ import (
 )
 
 // SaveUser saves a User struct to the Database
-func SaveUser(userA interface{}, Type string) error {
+func SaveUser(userA interface{}) error {
 	util.Config.Log.Debugln("Opening DB")
 	db := Open()
 
@@ -34,13 +34,16 @@ func SaveUser(userA interface{}, Type string) error {
 	var twitchName string
 	var twitchToken string
 	var twitch_token_id int64
+	var Type string
 	switch v := userA.(type) {
 	case *user.ASUser:
 		mxid = v.Mxid
 		twitchName = v.TwitchName
+		Type = "AS"
 	case *user.RealUser:
 		util.Config.Log.Debugln("REAL USER")
 		mxid = v.Mxid
+		Type = "REAL"
 		twitchName = v.TwitchName
 		if v.TwitchTokenStruct != nil {
 			expiry, err := v.TwitchTokenStruct.Expiry.MarshalText()
@@ -57,6 +60,7 @@ func SaveUser(userA interface{}, Type string) error {
 			}
 		}
 	case *user.BotUser:
+		Type = "BOT"
 		mxid = v.Mxid
 		twitchName = v.TwitchName
 		twitchToken = v.TwitchToken
@@ -275,7 +279,7 @@ func GetBotUser() (*user.BotUser, error) {
 	botUser.MXClient = client
 
 	util.Config.Log.Debugf("Saving Bot User to DB: %+v\n", botUser)
-	SaveUser(botUser, "BOT")
+	SaveUser(botUser)
 
 	return botUser, nil
 }

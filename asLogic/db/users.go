@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/connect"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/gorilla/websocket"
@@ -137,7 +137,7 @@ func getUsers() (users *userTransportStruct, err error) {
 			}
 			var ws *websocket.Conn
 			if TwitchToken != nil {
-				ws, err = twitch.Connect(TwitchToken.AccessToken, twitchName)
+				ws, err = connect.Connect(TwitchToken.AccessToken, twitchName)
 				if err != nil {
 					return nil, err
 				}
@@ -157,7 +157,7 @@ func getUsers() (users *userTransportStruct, err error) {
 				TwitchToken = twitchToken.String
 			}
 
-			ws, err := twitch.Connect(TwitchToken, twitchName)
+			ws, err := connect.Connect(TwitchToken, twitchName)
 			if err != nil {
 				return nil, err
 			}

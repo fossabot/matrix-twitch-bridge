@@ -5,6 +5,8 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/connect"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/join"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/login"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
@@ -114,16 +116,17 @@ func Run() error {
 	}
 
 	util.Config.Log.Debugln("Start Connecting BotUser to Twitch as: ", util.BotUser.TwitchName)
-	util.BotUser.TwitchWS, err = twitch.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
+	util.BotUser.TwitchWS, err = connect.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
 	if err != nil {
 		return err
 	}
 
 	util.Config.Log.Debugln("Start letting BotUser listen to Twitch")
-	twitch.Listen(queryHandler.QueryHandler().TwitchUsers, queryHandler.QueryHandler().TwitchRooms)
+	// Todo make TwitchRooms map somehow direct accessible from Listen
+	twitch.Listen()
 
 	for v := range queryHandler.QueryHandler().TwitchRooms {
-		err = twitch.Join(util.BotUser.TwitchWS, v)
+		err = join.Join(util.BotUser.TwitchWS, v)
 		if err != nil {
 			return err
 		}
@@ -218,7 +221,7 @@ func useEvent(event appservice.Event) error {
 			var err error
 
 			util.Config.Log.Debugln("Connect new WS to Twitch")
-			mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
+			mxUser.TwitchWS, err = connect.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
 			if err != nil {
 				return err
 			}
@@ -230,7 +233,7 @@ func useEvent(event appservice.Event) error {
 		if v.ID == event.RoomID {
 
 			util.Config.Log.Debugln("Join Twitch Channel")
-			err := twitch.Join(mxUser.TwitchWS, v.TwitchChannel)
+			err := join.Join(mxUser.TwitchWS, v.TwitchChannel)
 			if err != nil {
 				return err
 			}

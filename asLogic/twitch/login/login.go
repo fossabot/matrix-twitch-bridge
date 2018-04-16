@@ -6,7 +6,7 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
-	twitch2 "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/connect"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/matrix-org/gomatrix"
@@ -125,7 +125,7 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 
 		db.SaveUser(queryHandler.QueryHandler().RealUsers[state])
 
-		queryHandler.QueryHandler().RealUsers[state].TwitchWS, err = twitch2.Connect(tok.AccessToken, p.Name)
+		queryHandler.QueryHandler().RealUsers[state].TwitchWS, err = connect.Connect(tok.AccessToken, p.Name)
 		if err != nil {
 			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)

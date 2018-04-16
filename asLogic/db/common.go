@@ -22,9 +22,9 @@ func Init() (err error) {
 
 	log.Println("Creating DB Tables if needed")
 	createTables := `CREATE TABLE IF NOT EXISTS users (id integer not null primary key, type text , mxid text, twitch_name text, twitch_token text, twitch_token_id text);
-						 CREATE TABLE IF NOT EXISTS tokens (id integer not null primary key, access_token text, token_type text, refresh_token text, expiry text);
-						 CREATE TABLE IF NOT EXISTS rooms (id integer not null primary key, room_alias text, room_id text, twitch_channel text);
-						 `
+					CREATE TABLE IF NOT EXISTS tokens (id integer not null primary key, access_token text, token_type text, refresh_token text, expiry text);
+					CREATE TABLE IF NOT EXISTS rooms (id integer not null primary key, room_alias text, room_id text, twitch_channel text);
+					`
 	_, execErr := db.Exec(createTables)
 	if execErr != nil {
 		err = fmt.Errorf("DB EXEC ERR: %s", execErr)

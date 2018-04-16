@@ -41,6 +41,9 @@ func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
 			}
 		}
 	}()
+	if err != nil {
+		return
+	}
 
 	// Request needed IRC Capabilities https://dev.twitch.tv/docs/irc/#twitch-specific-irc-capabilities
 	sendErr := WS.WriteMessage(websocket.TextMessage, []byte("CAP REQ :twitch.tv/membership twitch.tv/tags"))
@@ -66,8 +69,8 @@ func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
 
 func Join(WS *websocket.Conn, channel string) error {
 	// Join Room
-	 err := WS.WriteMessage(websocket.TextMessage, []byte("JOIN #"+channel))
-	 return err
+	err := WS.WriteMessage(websocket.TextMessage, []byte("JOIN #"+channel))
+	return err
 }
 
 // Listen answers to the PING messages by Twitch and relays messages to Matrix

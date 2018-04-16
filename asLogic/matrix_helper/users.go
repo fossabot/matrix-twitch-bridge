@@ -22,6 +22,9 @@ func CreateUser(client *gomatrix.Client, username string) error {
 	util.Config.Log.Debugf("registerReq: %+v\n", registerReq)
 	util.Config.Log.Debugf("client: %+v\n", client)
 	register, inter, err := client.Register(&registerReq)
+	util.Config.Log.Debugf("register: %+v\n", register)
+	util.Config.Log.Debugf("inter: %+v\n", inter)
+	util.Config.Log.Debugf("err: %+v\n", err)
 	if err != nil {
 		return err
 	}

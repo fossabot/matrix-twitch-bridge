@@ -92,8 +92,10 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 	code, cok := query["code"]
 	state, sok := query["state"]
 	if sok && cok {
+		util.Config.Log.Debugln(code)
 		tok, err := conf.Exchange(ctx, code[0])
 		if err != nil {
+			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		queryHandler.QueryHandler().RealUsers[state[0]].TwitchTokenStruct = tok
@@ -104,9 +106,11 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 
 		resp, err := queryHandler.QueryHandler().RealUsers[state[0]].TwitchHTTPClient.Get("https://api.twitch.tv/kraken/user?oauth_token=" + tok.AccessToken)
 		if err != nil {
+			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		if resp.Body == nil {
+			util.Config.Log.Errorln("Body is empty")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		defer resp.Body.Close()
@@ -114,6 +118,7 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		err = json.NewDecoder(resp.Body).Decode(&p)
 		queryHandler.QueryHandler().RealUsers[state[0]].TwitchWS, err = twitch2.Connect(tok.AccessToken, p.Name)
 		if err != nil {
+			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}

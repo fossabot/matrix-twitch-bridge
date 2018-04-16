@@ -100,7 +100,7 @@ func Listen(users map[string]*user.ASUser, rooms map[string]string) {
 				}
 			}
 
-			util.Config.Log.Debugln("recv: %s\n", message)
+			util.Config.Log.Debugf("recv: %s\n", message)
 		}
 	}()
 }

@@ -89,7 +89,6 @@ func Listen(users map[string]*user.ASUser, rooms map[string]string) {
 				util.Config.Log.Errorln(err)
 				return
 			}
-			util.Config.Log.Debugln("Twitch Message: ", message)
 			parsedMessage := parseMessage(fmt.Sprintf("%s", message))
 			if parsedMessage != nil {
 				switch parsedMessage.Command {
@@ -101,7 +100,7 @@ func Listen(users map[string]*user.ASUser, rooms map[string]string) {
 				}
 			}
 
-			util.Config.Log.Infof("recv: %s\n", message)
+			util.Config.Log.Debugln("recv: %s\n", message)
 		}
 	}()
 }

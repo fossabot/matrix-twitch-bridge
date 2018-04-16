@@ -38,33 +38,40 @@ func prepareRun() error {
 	util.Config.LogConfig.Configure(util.Config.Log)
 	util.Config.Log.Debugln("Logger initialized successfully.")
 
+	util.Config.Log.Debugln("Creating queryHandler.")
 	qHandler := queryHandler.QueryHandler()
 
+	util.Config.Log.Debugln("Loading Twitch Rooms from DB.")
 	qHandler.TwitchRooms, err = db.GetTwitchRooms()
 	if err != nil {
 		return err
 	}
 
+	util.Config.Log.Debugln("Loading Rooms from DB.")
 	qHandler.Aliases, err = db.GetRooms()
 	if err != nil {
 		return err
 	}
 
+	util.Config.Log.Debugln("Loading Twitch Users from DB.")
 	qHandler.TwitchUsers, err = db.GetTwitchUsers()
 	if err != nil {
 		return err
 	}
 
+	util.Config.Log.Debugln("Loading AS Users from DB.")
 	qHandler.Users, err = db.GetASUsers()
 	if err != nil {
 		return err
 	}
 
+	util.Config.Log.Debugln("Loading Real Users from DB.")
 	qHandler.RealUsers, err = db.GetRealUsers()
 	if err != nil {
 		return err
 	}
 
+	util.Config.Log.Debugln("Loading Bot User from DB.")
 	util.BotUser, err = db.GetBotUser()
 	if err != nil {
 		return err

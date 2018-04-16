@@ -168,7 +168,6 @@ func useEvent(event appservice.Event) error {
 		mxUser = &user.RealUser{}
 		mxUser.Mxid = event.SenderID
 		mxUser.TwitchTokenStruct = nil
-		db.SaveUser(mxUser, "REAL")
 		err := login.SendLoginURL(mxUser)
 		if err != nil {
 			return err
@@ -180,6 +179,7 @@ func useEvent(event appservice.Event) error {
 			return err
 		}
 	}
+	db.SaveUser(mxUser, "REAL")
 	if mxUser.TwitchWS == nil {
 		if mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
 			var err error

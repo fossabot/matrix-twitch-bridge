@@ -93,7 +93,6 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 	code := query.Get("code")
 	state := query.Get("state")
 	if state != "" && code != "" {
-		util.Config.Log.Debugln("state: ", state)
 		tok, err := conf.Exchange(ctx, code)
 		if err != nil {
 			util.Config.Log.Errorln(err)
@@ -117,7 +116,7 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		defer resp.Body.Close()
 
 		queryHandler.QueryHandler().RealUsers[state].TwitchName = p.Name
-		util.Config.Log.Debugln(p.Name)
+		util.Config.Log.Debugf("%+v\n", p.Name)
 
 		db.SaveUser(queryHandler.QueryHandler().RealUsers[state])
 

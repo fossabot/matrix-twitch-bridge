@@ -54,8 +54,7 @@ func (q queryHandler) QueryAlias(alias string) bool {
 		// name magic
 		pre := strings.Split(v.Regex, ".+")[0]
 		suff := strings.Split(v.Regex, ".+")[1]
-		tUsername := strings.TrimSuffix(strings.TrimPrefix(alias, pre), suff)
-		util.Config.Log.Debugln("tUsername: ", tUsername)
+		tUsername = strings.TrimSuffix(strings.TrimPrefix(alias, pre), suff)
 		userdata, err := api.RequestUserData(tUsername)
 		if err != nil {
 			util.Config.Log.Errorln(err)

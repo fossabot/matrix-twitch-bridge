@@ -19,7 +19,7 @@ func SaveRoom(Room *room.Room) error {
 
 	alias := Room.Alias
 	RoomID := Room.ID
-	twitchChannel := Room.Alias
+	twitchChannel := Room.TwitchChannel
 
 	_, err = stmt.Exec(alias, RoomID, twitchChannel)
 	if err != nil {

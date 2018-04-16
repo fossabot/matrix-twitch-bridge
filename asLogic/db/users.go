@@ -13,21 +13,28 @@ import (
 
 // SaveUser saves a User struct to the Database
 func SaveUser(userA interface{}, Type string) error {
+	util.Config.Log.Debugln("Opening DB")
 	db := Open()
+
+	util.Config.Log.Debugln("Beginning DB transaction")
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
+
+	util.Config.Log.Debugln("Prepare DB Statement")
 	stmt, err := tx.Prepare("INSERT INTO users (type, mxid, twitch_name, twitch_token, twitch_token_id) VALUES (?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
+
 	defer stmt.Close()
 	var mxid string
 	var twitchName string
 	var twitchToken string
 	var twitch_token_id int64
 
+	util.Config.Log.Debugln("Checking Type of User")
 	switch v := userA.(type) {
 	case user.ASUser:
 		mxid = v.Mxid
@@ -55,12 +62,20 @@ func SaveUser(userA interface{}, Type string) error {
 		twitchToken = v.TwitchToken
 	}
 
+	util.Config.Log.Debugln("Inserting DATA")
+	util.Config.Log.Debugln("Type:", Type)
+	util.Config.Log.Debugln("mxid: ", mxid)
+	util.Config.Log.Debugln("twitchName: ", twitchName)
+	util.Config.Log.Debugln("twitchToken: ", twitchToken)
+	util.Config.Log.Debugln("twitch_token_id: ", twitch_token_id)
 	_, err = stmt.Exec(Type, mxid, twitchName, twitchToken, twitch_token_id)
 	if err != nil {
 		return err
 	}
-	tx.Commit()
-	return nil
+
+	util.Config.Log.Debugln("Commit to DB")
+	err = tx.Commit()
+	return err
 }
 
 type userTransportStruct struct {
@@ -257,8 +272,10 @@ func GetBotUser() (*user.BotUser, error) {
 		return nil, err
 	}
 
+	util.Config.Log.Debugln("Adding Client to Bot Struct")
 	botUser.MXClient = client
 
+	util.Config.Log.Debugln("Saving Bot User to DB")
 	SaveUser(botUser, "BOT")
 
 	return botUser, nil

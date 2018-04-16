@@ -23,6 +23,7 @@ func SendLoginURL(ruser *user.RealUser) error {
 			ClientID:     util.ClientID,
 			ClientSecret: util.ClientSecret,
 			Scopes:       []string{"chat_login"},
+			RedirectURL:  util.Publicaddress + "/callback",
 			Endpoint:     twitch.Endpoint,
 		}
 	}

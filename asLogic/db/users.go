@@ -236,7 +236,7 @@ func GetBotUser() (*user.BotUser, error) {
 
 		return bot, nil
 	}
-	var userID = "@appservice-twitch:" + util.Config.HomeserverURL
+	var userID = "@" + util.Config.Registration.SenderLocalpart + ":" + util.Config.HomeserverURL
 	botUser := &user.BotUser{
 		Mxid:        userID,
 		TwitchName:  util.BotUName,

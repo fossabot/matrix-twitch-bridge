@@ -113,7 +113,7 @@ func Run() error {
 		return err
 	}
 
-	util.Config.Log.Debugln("Start Connecting BotUser to Twitch")
+	util.Config.Log.Debugln("Start Connecting BotUser to Twitch as: ", util.BotUser.TwitchName)
 	util.BotUser.TwitchWS, err = twitch.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
 	if err != nil {
 		return err
@@ -128,9 +128,6 @@ func Run() error {
 			return err
 		}
 	}
-
-	util.Config.Log.Infoln("Starting Appservice Server...")
-	util.Config.Listen()
 
 	go func() {
 		for {
@@ -164,5 +161,9 @@ func Run() error {
 			}
 		}
 	}()
+
+	util.Config.Log.Infoln("Starting Appservice Server...")
+	util.Config.Listen()
+
 	select {}
 }

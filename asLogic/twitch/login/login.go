@@ -8,6 +8,7 @@ import (
 	twitch2 "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
+	"github.com/matrix-org/gomatrix"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/twitch"
 	"net/http"
@@ -36,7 +37,10 @@ func SendLoginURL(ruser *user.RealUser) error {
 		}
 		ruser.Room = resp.RoomID
 	}
-
+	inviteReq := &gomatrix.ReqInviteUser{
+		UserID: ruser.Mxid,
+	}
+	util.BotUser.MXClient.InviteUser(ruser.Room, inviteReq)
 	util.BotUser.MXClient.SendNotice(ruser.Room, "Please Login to Twitch using the following URL: "+url+"\n You will get redirected to a Magic Page which you can close as soon as it loaded.")
 
 	return nil

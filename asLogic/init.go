@@ -136,6 +136,8 @@ func Run() error {
 					db.SaveUser(mxUser, "REAL")
 					login.SendLoginURL(mxUser)
 					continue
+				} else if mxUser.TwitchTokenStruct == nil {
+					login.SendLoginURL(mxUser)
 				}
 				if mxUser.TwitchWS == nil {
 					if mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {

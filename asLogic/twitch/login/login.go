@@ -89,23 +89,22 @@ type profile struct {
 func Callback(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	query := r.URL.Query()
-	code, cok := query["code"]
-	state, sok := query["state"]
-	if sok && cok {
-		util.Config.Log.Debugln(state)
-		tok, err := conf.Exchange(ctx, code[0])
+	code := query.Get("code")
+	state := query.Get("state")
+	if state != "" && code != "" {
+		util.Config.Log.Debugln("state: ", state)
+		tok, err := conf.Exchange(ctx, code)
 		if err != nil {
 			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-		util.Config.Log.Debugf("%+v\n", tok)
-		queryHandler.QueryHandler().RealUsers[state[0]].TwitchTokenStruct = tok
-		queryHandler.QueryHandler().RealUsers[state[0]].TwitchHTTPClient = conf.Client(ctx, tok)
-		queryHandler.QueryHandler().RealUsers[state[0]].TwitchHTTPClient.Timeout = time.Second * 10
+		queryHandler.QueryHandler().RealUsers[state].TwitchTokenStruct = tok
+		queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient = conf.Client(ctx, tok)
+		queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient.Timeout = time.Second * 10
 
 		var p profile
 
-		resp, err := queryHandler.QueryHandler().RealUsers[state[0]].TwitchHTTPClient.Get("https://api.twitch.tv/kraken/user?oauth_token=" + tok.AccessToken)
+		resp, err := queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient.Get("https://api.twitch.tv/kraken/user?oauth_token=" + tok.AccessToken)
 		if err != nil {
 			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -117,7 +116,7 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		defer resp.Body.Close()
 
 		err = json.NewDecoder(resp.Body).Decode(&p)
-		queryHandler.QueryHandler().RealUsers[state[0]].TwitchWS, err = twitch2.Connect(tok.AccessToken, p.Name)
+		queryHandler.QueryHandler().RealUsers[state].TwitchWS, err = twitch2.Connect(tok.AccessToken, p.Name)
 		if err != nil {
 			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)

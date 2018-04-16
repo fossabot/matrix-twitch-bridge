@@ -6,6 +6,7 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
+	"github.com/gorilla/websocket"
 	"github.com/matrix-org/gomatrix"
 	"golang.org/x/oauth2"
 	"strings"
@@ -41,7 +42,6 @@ func SaveUser(userA interface{}) error {
 		twitchName = v.TwitchName
 		Type = "AS"
 	case *user.RealUser:
-		util.Config.Log.Debugln("REAL USER")
 		mxid = v.Mxid
 		Type = "REAL"
 		twitchName = v.TwitchName
@@ -110,7 +110,7 @@ func getUsers() (users *userTransportStruct, err error) {
 			}
 			transportStruct.ASUsers = append(transportStruct.ASUsers, ASUser)
 		case "REAL":
-			var TwitchToken oauth2.Token
+			var TwitchToken *oauth2.Token
 			if twitchTokenID.Valid {
 				var accessToken string
 				var tokenType string
@@ -126,7 +126,7 @@ func getUsers() (users *userTransportStruct, err error) {
 					}
 				}
 
-				TwitchToken = oauth2.Token{
+				TwitchToken = &oauth2.Token{
 					AccessToken:  accessToken,
 					TokenType:    tokenType,
 					RefreshToken: refreshToken,
@@ -135,17 +135,19 @@ func getUsers() (users *userTransportStruct, err error) {
 					TwitchToken.Expiry = expiryTime
 				}
 			}
-			ws, err := twitch.Connect(TwitchToken.AccessToken, twitchName)
-			if err != nil {
-				return nil, err
+			var ws *websocket.Conn
+			if TwitchToken != nil {
+				ws, err = twitch.Connect(TwitchToken.AccessToken, twitchName)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			RealUser := &user.RealUser{
-				Mxid: mxid,
-				// TODO REWRITE
-				//TwitchToken: twitchToken,
-				TwitchName: twitchName,
-				TwitchWS:   ws,
+				Mxid:              mxid,
+				TwitchTokenStruct: TwitchToken,
+				TwitchName:        twitchName,
+				TwitchWS:          ws,
 			}
 
 			transportStruct.RealUsers = append(transportStruct.RealUsers, RealUser)

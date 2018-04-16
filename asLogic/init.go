@@ -10,6 +10,7 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/fatih/color"
 	"github.com/gorilla/mux"
+	"log"
 	"maunium.net/go/maulogger"
 	"maunium.net/go/mautrix-appservice-go"
 	"net/http"
@@ -78,7 +79,10 @@ func prepareRun() error {
 	}
 
 	util.Config.Log.Infoln("Init...")
-	util.Config.Init(qHandler)
+	_, err = util.Config.Init(qHandler)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	util.Config.Log.Infoln("Init Done...")
 
 	util.Config.Log.Infoln("Starting public server...")

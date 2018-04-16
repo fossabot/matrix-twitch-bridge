@@ -139,7 +139,7 @@ func Run() error {
 
 					qHandler := queryHandler.QueryHandler()
 					for _, v := range qHandler.Aliases {
-						if v.ID == event.ID {
+						if v.ID != event.ID {
 							if event.SenderID != util.BotUser.MXClient.UserID {
 								err = useEvent(event)
 								if err != nil {

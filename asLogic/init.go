@@ -166,7 +166,7 @@ func useEvent(event appservice.Event) error {
 	mxUser := qHandler.RealUsers[event.SenderID]
 
 	util.Config.Log.Infoln("Processing Event")
-
+	// TODO move real User creation to join event!
 	if mxUser == nil {
 		util.Config.Log.Debugln("Creating new User")
 

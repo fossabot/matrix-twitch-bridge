@@ -97,6 +97,8 @@ func Listen(users map[string]*user.ASUser, rooms map[string]string) {
 					users[parsedMessage.Username].MXClient.SendText(room, parsedMessage.Message)
 				case "PING":
 					util.BotUser.TwitchWS.WriteControl(websocket.PongMessage, []byte(""), time.Now().Add(10*time.Second))
+				default:
+					util.Config.Log.Debugf("[TWITCH]: %+v\n", parsedMessage)
 				}
 			}
 

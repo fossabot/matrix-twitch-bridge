@@ -75,6 +75,7 @@ func Join(WS *websocket.Conn, channel string) error {
 
 func Send(WS *websocket.Conn, channel, message string) error {
 	// Send Message
+	util.Config.Log.Debugln(channel)
 	err := WS.WriteMessage(websocket.TextMessage, []byte("PRIVMSG #"+channel+" :"+message))
 	return err
 }

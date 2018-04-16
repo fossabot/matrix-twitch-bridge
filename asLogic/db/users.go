@@ -35,7 +35,7 @@ func SaveUser(userA interface{}, Type string) error {
 	var twitchToken string
 	var twitch_token_id int64
 
-	util.Config.Log.Debugln("Checking Type of User %+v", userA)
+	util.Config.Log.Debugf("Checking Type of User %+v\n", userA)
 	switch v := userA.(type) {
 	case user.ASUser:
 		mxid = v.Mxid
@@ -277,7 +277,7 @@ func GetBotUser() (*user.BotUser, error) {
 	util.Config.Log.Debugln("Adding Client to Bot Struct")
 	botUser.MXClient = client
 
-	util.Config.Log.Debugln("Saving Bot User to DB: %+v", botUser)
+	util.Config.Log.Debugf("Saving Bot User to DB: %+v\n", botUser)
 	SaveUser(botUser, "BOT")
 
 	return botUser, nil

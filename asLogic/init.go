@@ -173,7 +173,6 @@ func useEvent(event appservice.Event) error {
 		qHandler.RealUsers[event.SenderID] = &user.RealUser{}
 		mxUser := qHandler.RealUsers[event.SenderID]
 		mxUser.Mxid = event.SenderID
-		mxUser.TwitchTokenStruct = nil
 
 		util.Config.Log.Debugln("Let new User Login")
 		err := login.SendLoginURL(mxUser)
@@ -190,6 +189,7 @@ func useEvent(event appservice.Event) error {
 		}
 	}
 	util.Config.Log.Debugln("Check if we have all data needed for twitch")
+	util.Config.Log.Debugf("TwitchTokenStruct: %+v", mxUser.TwitchTokenStruct)
 	if mxUser.TwitchTokenStruct != nil && mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
 		util.Config.Log.Debugln("Check if we have already a open WS")
 		if mxUser.TwitchWS == nil {

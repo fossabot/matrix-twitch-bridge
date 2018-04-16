@@ -58,6 +58,9 @@ func SaveUser(userA interface{}, Type string) error {
 			}
 		}
 	case user.BotUser:
+		util.Config.Log.Debugln("mxid: ", v.Mxid)
+		util.Config.Log.Debugln("twitchName: ", v.TwitchName)
+		util.Config.Log.Debugln("twitchToken: ", v.TwitchToken)
 		mxid = v.Mxid
 		twitchName = v.TwitchName
 		twitchToken = v.TwitchToken

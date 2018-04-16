@@ -124,7 +124,10 @@ func Run() error {
 	twitch.Listen(queryHandler.QueryHandler().TwitchUsers, queryHandler.QueryHandler().TwitchRooms)
 
 	for v := range queryHandler.QueryHandler().TwitchRooms {
-		twitch.Join(util.BotUser.TwitchWS, v)
+		err = twitch.Join(util.BotUser.TwitchWS, v)
+		if err != nil {
+			return err
+		}
 	}
 
 	for {

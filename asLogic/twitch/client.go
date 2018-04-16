@@ -43,18 +43,31 @@ func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
 	}()
 
 	// Request needed IRC Capabilities https://dev.twitch.tv/docs/irc/#twitch-specific-irc-capabilities
-	WS.WriteMessage(websocket.TextMessage, []byte("CAP REQ :twitch.tv/membership twitch.tv/tags"))
+	sendErr := WS.WriteMessage(websocket.TextMessage, []byte("CAP REQ :twitch.tv/membership twitch.tv/tags"))
+	if sendErr != nil {
+		err = sendErr
+		return
+	}
 
 	// Login
-	WS.WriteMessage(websocket.TextMessage, []byte("PASS oauth:"+oauthToken))
-	WS.WriteMessage(websocket.TextMessage, []byte("NICK "+username))
+	sendErr = WS.WriteMessage(websocket.TextMessage, []byte("PASS oauth:"+oauthToken))
+	if sendErr != nil {
+		err = sendErr
+		return
+	}
+	sendErr = WS.WriteMessage(websocket.TextMessage, []byte("NICK "+username))
+	if sendErr != nil {
+		err = sendErr
+		return
+	}
 
 	return
 }
 
-func Join(WS *websocket.Conn, channel string) {
+func Join(WS *websocket.Conn, channel string) error {
 	// Join Room
-	WS.WriteMessage(websocket.TextMessage, []byte("JOIN #"+channel))
+	 err := WS.WriteMessage(websocket.TextMessage, []byte("JOIN #"+channel))
+	 return err
 }
 
 // Listen answers to the PING messages by Twitch and relays messages to Matrix
@@ -64,7 +77,7 @@ func Listen(users map[string]*user.ASUser, rooms map[string]string) {
 		for {
 			_, message, err := util.BotUser.TwitchWS.ReadMessage()
 			if err != nil {
-				util.Config.Log.Errorln("[Error]", err)
+				util.Config.Log.Errorln(err)
 				return
 			}
 			util.Config.Log.Debugln("Twitch Message: ", message)

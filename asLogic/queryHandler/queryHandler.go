@@ -50,27 +50,23 @@ func (q queryHandler) QueryAlias(alias string) bool {
 	var displayname string
 	var logoURL string
 	for _, v := range util.Config.Registration.Namespaces.RoomAliases {
-		r, err := regexp.Compile(v.Regex)
+		// name magic
+		pre := strings.Split(v.Regex, ".+")[0]
+		suff := strings.Split(v.Regex, ".+")[1]
+		tUsername := strings.TrimSuffix(strings.TrimPrefix(alias, pre), suff)
+		util.Config.Log.Debugln("tUsername: ", tUsername)
+		userdata, err := api.RequestUserData(tUsername)
 		if err != nil {
 			util.Config.Log.Errorln(err)
 			return false
 		}
-		if r.MatchString(alias) {
-			tUsername := r.FindStringSubmatch(alias)[0]
-			util.Config.Log.Debugln("tUsername: ", tUsername)
-			userdata, err := api.RequestUserData(tUsername)
-			if err != nil {
-				util.Config.Log.Errorln(err)
-				return false
-			}
-			if userdata.Total == 0 {
-				util.Config.Log.Errorln("user missing")
-				return false
-			}
-			displayname = userdata.Users[0].DisplayName
-			logoURL = userdata.Users[0].Logo
-			break
+		if userdata.Total == 0 {
+			util.Config.Log.Errorln("user missing")
+			return false
 		}
+		displayname = userdata.Users[0].DisplayName
+		logoURL = userdata.Users[0].Logo
+		break
 	}
 
 	resp, err := matrix_helper.CreateRoom(client, displayname, logoURL, roomalias, "public_chat")

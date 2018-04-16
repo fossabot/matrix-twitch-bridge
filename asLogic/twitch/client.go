@@ -62,6 +62,7 @@ func Listen(users map[string]*user.ASUser, rooms map[string]string) {
 				util.Config.Log.Errorln("[Error]", err)
 				return
 			}
+			util.Config.Log.Debugln("Twitch Message: ", message)
 			parsedMessage := parseMessage(fmt.Sprintf("%s", message))
 			if parsedMessage != nil {
 				switch parsedMessage.Command {

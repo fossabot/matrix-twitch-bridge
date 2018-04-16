@@ -190,9 +190,9 @@ func useEvent(event appservice.Event) error {
 	}
 	util.Config.Log.Debugln("Check if we have all data needed for twitch")
 	util.Config.Log.Debugln("TwitchName: ", mxUser.TwitchName)
-	if mxUser.TwitchTokenStruct != nil && mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
-		util.Config.Log.Debugln("Check if we have already a open WS")
-		if mxUser.TwitchWS == nil {
+	util.Config.Log.Debugln("Check if we have already a open WS")
+	if mxUser.TwitchWS == nil {
+		if mxUser.TwitchTokenStruct != nil && mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
 			var err error
 
 			util.Config.Log.Debugln("Connect new WS to Twitch")
@@ -201,37 +201,36 @@ func useEvent(event appservice.Event) error {
 				return err
 			}
 		}
+	}
 
-		util.Config.Log.Debugln("Check if Room of event is known")
-		for _, v := range qHandler.Aliases {
-			if v.ID == event.RoomID {
+	util.Config.Log.Debugln("Check if Room of event is known")
+	for _, v := range qHandler.Aliases {
+		if v.ID == event.RoomID {
 
-				util.Config.Log.Debugln("Join Twitch Channel")
-				err := twitch.Join(mxUser.TwitchWS, v.TwitchChannel)
+			util.Config.Log.Debugln("Join Twitch Channel")
+			err := twitch.Join(mxUser.TwitchWS, v.TwitchChannel)
+			if err != nil {
+				return err
+			}
+			util.Config.Log.Debugln("Check if text or other Media")
+			if event.Content["msgtype"] == "m.text" {
+				util.Config.Log.Debugln("Send message to twitch")
+				err = twitch.Send(mxUser.TwitchWS, v.TwitchChannel, event.Content["body"].(string))
 				if err != nil {
 					return err
 				}
-				util.Config.Log.Debugln("Check if text or other Media")
-				if event.Content["msgtype"] == "m.text" {
-					util.Config.Log.Debugln("Send message to twitch")
-					err = twitch.Send(mxUser.TwitchWS, v.TwitchChannel, event.Content["body"].(string))
-					if err != nil {
-						return err
-					}
-				} else {
-					util.Config.Log.Debugln("Send message to bridge Room to tell user to use plain text")
-					resp, err := util.BotUser.MXClient.GetDisplayName(event.SenderID)
-					if err != nil {
-						return err
-					}
-					_, err = util.BotUser.MXClient.SendNotice(event.RoomID, resp.DisplayName+": Please use Text only as Twitch doesn't support any other Media Format!")
-					if err != nil {
-						return err
-					}
+			} else {
+				util.Config.Log.Debugln("Send message to bridge Room to tell user to use plain text")
+				resp, err := util.BotUser.MXClient.GetDisplayName(event.SenderID)
+				if err != nil {
+					return err
+				}
+				_, err = util.BotUser.MXClient.SendNotice(event.RoomID, resp.DisplayName+": Please use Text only as Twitch doesn't support any other Media Format!")
+				if err != nil {
+					return err
 				}
 			}
 		}
-
 	}
 	return nil
 }

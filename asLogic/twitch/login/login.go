@@ -40,8 +40,12 @@ func SendLoginURL(ruser *user.RealUser) error {
 	inviteReq := &gomatrix.ReqInviteUser{
 		UserID: ruser.Mxid,
 	}
-	util.Config.Log.Debugf("InviteReq: %+v\n", inviteReq)
-	_, err := util.BotUser.MXClient.InviteUser(ruser.Room, inviteReq)
+
+	// Workaround gomatrix bug
+	u := util.BotUser.MXClient.BuildURL("rooms", ruser.Room, "invite")
+	resp := &gomatrix.RespInviteUser{}
+	_, err := util.BotUser.MXClient.MakeRequest("POST", u, inviteReq, &resp)
+
 	if err != nil {
 		return err
 	}

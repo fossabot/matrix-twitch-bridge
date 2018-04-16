@@ -14,6 +14,7 @@ var db *sql.DB
 func Init() (err error) {
 	log.Println("Start setting up DB")
 	var openErr error
+	log.Println("DBFilePath: ", util.DbFile)
 	db, openErr = sql.Open("sqlite3", util.DbFile)
 	if openErr != nil {
 		err = openErr

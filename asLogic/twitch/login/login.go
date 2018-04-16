@@ -115,12 +115,16 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		}
 		defer resp.Body.Close()
 
+		err = json.NewDecoder(resp.Body).Decode(&p)
+		if err != nil {
+			util.Config.Log.Errorln(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
 		queryHandler.QueryHandler().RealUsers[state].TwitchName = p.Name
-		util.Config.Log.Debugf("%+v\n", p.Name)
 
 		db.SaveUser(queryHandler.QueryHandler().RealUsers[state])
 
-		err = json.NewDecoder(resp.Body).Decode(&p)
 		queryHandler.QueryHandler().RealUsers[state].TwitchWS, err = twitch2.Connect(tok.AccessToken, p.Name)
 		if err != nil {
 			util.Config.Log.Errorln(err)

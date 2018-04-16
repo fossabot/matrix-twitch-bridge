@@ -4,6 +4,7 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/api"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
@@ -86,6 +87,7 @@ func (q queryHandler) QueryAlias(alias string) bool {
 	if err != nil {
 		util.Config.Log.Errorln(err)
 	}
+	twitch.Join(util.BotUser.TwitchWS, tUsername)
 	return true
 }
 

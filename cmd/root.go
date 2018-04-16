@@ -31,10 +31,6 @@ var rootCmd = &cobra.Command{
 	//TODO Descriptions
 	Short: "",
 	Long:  ``,
-	PreRun: func(cmd *cobra.Command, args []string) {
-		db.Init()
-		log.Println("DB Set Up")
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if _, err := os.Stat(util.CfgFile); os.IsNotExist(err) {
 			asLogic.Init()
@@ -54,6 +50,9 @@ func Execute() {
 }
 
 func init() {
+	db.Init()
+	log.Println("DB Set Up")
+
 	rootCmd.PersistentFlags().StringVarP(&util.CfgFile, "config", "c", "./config.yaml", "config file (default is ./config.yaml . It will get generated if no value is given)")
 	rootCmd.PersistentFlags().StringVar(&util.DbFile, "database", "./twitch.db", "db file where data gets saved/cached to (default is ./twitch.db .  It will get generated if no value is given)")
 	rootCmd.PersistentFlags().StringVar(&util.ClientID, "client_id", "", "client_id of the registered Twitch App")

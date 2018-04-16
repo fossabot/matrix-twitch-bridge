@@ -40,7 +40,7 @@ var rootCmd = &cobra.Command{
 			asLogic.Init()
 		} else {
 			err = asLogic.Run()
-			log.Fatalln(err)
+			log.Panicln(err)
 		}
 	},
 }

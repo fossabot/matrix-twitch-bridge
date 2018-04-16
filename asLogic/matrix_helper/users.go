@@ -2,6 +2,7 @@ package matrix_helper
 
 import (
 	"fmt"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/matrix-org/gomatrix"
 )
 
@@ -16,6 +17,8 @@ func CreateUser(client *gomatrix.Client, username string) error {
 			Type: "m.login.application_service",
 		},
 	}
+
+	util.Config.Log.Debugln("Starting Register")
 	register, inter, err := client.Register(&registerReq)
 	if err != nil {
 		return err

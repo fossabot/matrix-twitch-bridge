@@ -236,8 +236,8 @@ func GetBotUser() (*user.BotUser, error) {
 
 		return bot, nil
 	}
-	util.Config.Log.Infoln(util.Config.Registration.SenderLocalpart)
-	util.Config.Log.Infoln(util.Config.HomeserverDomain)
+	util.Config.Log.Debugln(util.Config.Registration.SenderLocalpart)
+	util.Config.Log.Debugln(util.Config.HomeserverDomain)
 	var userID = "@" + util.Config.Registration.SenderLocalpart + ":" + util.Config.HomeserverDomain
 	botUser := &user.BotUser{
 		Mxid:        userID,
@@ -245,10 +245,13 @@ func GetBotUser() (*user.BotUser, error) {
 		TwitchToken: util.BotAToken,
 	}
 
+	util.Config.Log.Debugln("Creating gomatrix Client for the Bot User")
 	client, err := gomatrix.NewClient(util.Config.HomeserverURL, userID, util.Config.Registration.AppToken)
 	if err != nil {
 		return nil, err
 	}
+
+	util.Config.Log.Debugln("Creating Bot User on the HomeServer")
 	err = matrix_helper.CreateUser(client, userID)
 	if err != nil {
 		return nil, err

@@ -10,6 +10,7 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/fatih/color"
 	"github.com/gorilla/mux"
+	"maunium.net/go/maulogger"
 	"maunium.net/go/mautrix-appservice-go"
 	"net/http"
 	"os"
@@ -31,6 +32,10 @@ func prepareRun() error {
 	}
 
 	util.Config.Registration, err = appservice.LoadRegistration(util.Config.RegistrationPath)
+
+	util.Config.Log = maulogger.Create()
+	util.Config.LogConfig.Configure(util.Config.Log)
+	util.Config.Log.Debugln("Logger initialized successfully.")
 
 	qHandler := queryHandler.QueryHandler()
 

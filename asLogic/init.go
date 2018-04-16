@@ -165,7 +165,8 @@ func useEvent(event appservice.Event) error {
 	qHandler := queryHandler.QueryHandler()
 	mxUser := qHandler.RealUsers[event.SenderID]
 	if mxUser == nil {
-		mxUser = &user.RealUser{}
+		qHandler.RealUsers[event.SenderID] = &user.RealUser{}
+		mxUser := qHandler.RealUsers[event.SenderID]
 		mxUser.Mxid = event.SenderID
 		mxUser.TwitchTokenStruct = nil
 		err := login.SendLoginURL(mxUser)

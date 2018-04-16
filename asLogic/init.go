@@ -18,7 +18,7 @@ import (
 // Init starts the interactive Config generator and exits
 func Init() {
 	var boldGreen = color.New(color.FgGreen).Add(color.Bold)
-	appservice.GenerateRegistration("twitch", "twitch", true, true)
+	appservice.GenerateRegistration("twitch", "appservice-twitch", true, true)
 	boldGreen.Println("Please restart the Twitch-Appservice with \"--client_id\"-flag applied")
 }
 

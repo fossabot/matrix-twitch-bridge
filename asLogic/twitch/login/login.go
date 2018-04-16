@@ -40,10 +40,13 @@ func SendLoginURL(ruser *user.RealUser) error {
 	inviteReq := &gomatrix.ReqInviteUser{
 		UserID: ruser.Mxid,
 	}
-	util.BotUser.MXClient.InviteUser(ruser.Room, inviteReq)
-	util.BotUser.MXClient.SendNotice(ruser.Room, "Please Login to Twitch using the following URL: "+url+"\n You will get redirected to a Magic Page which you can close as soon as it loaded.")
+	_, err := util.BotUser.MXClient.InviteUser(ruser.Room, inviteReq)
+	if err != nil {
+		return err
+	}
+	_, err = util.BotUser.MXClient.SendNotice(ruser.Room, "Please Login to Twitch using the following URL: "+url+"\n You will get redirected to a Magic Page which you can close as soon as it loaded.")
 
-	return nil
+	return err
 }
 
 // Get Info about the just logged in User: https://api.twitch.tv/kraken/user?oauth_token=<token we got from the login>

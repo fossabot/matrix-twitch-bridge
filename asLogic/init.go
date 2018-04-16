@@ -69,8 +69,11 @@ func prepareRun() error {
 		return err
 	}
 
+	util.Config.Log.Infoln("Init...")
 	util.Config.Init(qHandler)
+	util.Config.Log.Infoln("Init Done...")
 
+	util.Config.Log.Infoln("Starting public server...")
 	r := mux.NewRouter()
 	r.HandleFunc("/callback", login.Callback).Methods(http.MethodGet)
 
@@ -87,8 +90,8 @@ func prepareRun() error {
 		}
 	}()
 
+	util.Config.Log.Infoln("Starting Appservice Server...")
 	util.Config.Listen()
-	select {}
 
 	return nil
 }

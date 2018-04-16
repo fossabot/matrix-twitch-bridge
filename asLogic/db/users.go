@@ -34,13 +34,11 @@ func SaveUser(userA interface{}, Type string) error {
 	var twitchName string
 	var twitchToken string
 	var twitch_token_id int64
-
-	util.Config.Log.Debugf("Checking Type of User %+v\n", userA)
 	switch v := userA.(type) {
-	case user.ASUser:
+	case *user.ASUser:
 		mxid = v.Mxid
 		twitchName = v.TwitchName
-	case user.RealUser:
+	case *user.RealUser:
 		mxid = v.Mxid
 		twitchName = v.TwitchName
 		if v.TwitchTokenStruct != nil {
@@ -57,7 +55,7 @@ func SaveUser(userA interface{}, Type string) error {
 				return err
 			}
 		}
-	case user.BotUser:
+	case *user.BotUser:
 		util.Config.Log.Debugln("mxid: ", v.Mxid)
 		util.Config.Log.Debugln("twitchName: ", v.TwitchName)
 		util.Config.Log.Debugln("twitchToken: ", v.TwitchToken)

@@ -39,6 +39,7 @@ func SaveUser(userA interface{}, Type string) error {
 		mxid = v.Mxid
 		twitchName = v.TwitchName
 	case *user.RealUser:
+		util.Config.Log.Debugln("REAL USER")
 		mxid = v.Mxid
 		twitchName = v.TwitchName
 		if v.TwitchTokenStruct != nil {

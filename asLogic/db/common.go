@@ -13,7 +13,8 @@ var db *sql.DB
 // Init prepares the DBby opening it and creating the required tables if needed
 func Init() (err error) {
 	dbOnce.Do(func() {
-		db, openErr := sql.Open("sqlite3", util.DbFile)
+		var openErr error
+		db, openErr = sql.Open("sqlite3", util.DbFile)
 		if openErr != nil {
 			err = openErr
 			return

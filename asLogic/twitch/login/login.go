@@ -37,18 +37,26 @@ func SendLoginURL(ruser *user.RealUser) error {
 		}
 		ruser.Room = resp.RoomID
 	}
-	inviteReq := &gomatrix.ReqInviteUser{
-		UserID: ruser.Mxid,
-	}
 
-	// Workaround gomatrix bug
-	u := util.BotUser.MXClient.BuildURL("rooms", ruser.Room, "invite")
-	resp := &gomatrix.RespInviteUser{}
-	_, err := util.BotUser.MXClient.MakeRequest("POST", u, inviteReq, &resp)
-
+	joinedResp, err := util.BotUser.MXClient.JoinedMembers(ruser.Room)
 	if err != nil {
 		return err
 	}
+	if _, ok := joinedResp.Joined[ruser.Mxid]; !ok {
+		// Workaround gomatrix bug
+
+		inviteReq := &gomatrix.ReqInviteUser{
+			UserID: ruser.Mxid,
+		}
+
+		u := util.BotUser.MXClient.BuildURL("rooms", ruser.Room, "invite")
+		resp := &gomatrix.RespInviteUser{}
+		_, err = util.BotUser.MXClient.MakeRequest("POST", u, inviteReq, &resp)
+		if err != nil {
+			return err
+		}
+	}
+
 	_, err = util.BotUser.MXClient.SendNotice(ruser.Room, "Please Login to Twitch using the following URL: "+url+"\n You will get redirected to a Magic Page which you can close as soon as it loaded.")
 
 	return err

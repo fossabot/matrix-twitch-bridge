@@ -122,7 +122,7 @@ func parseMessage(message string) (parsedMessage *util.TMessage) {
 		parsedMessage.Channel = messageSplit[3]
 		parsedMessage.Message = strings.TrimLeft(messageSplit[4], ":")
 	} else if strings.HasPrefix(message, "PING") {
-		parsedMessage.Command = "Ping"
+		parsedMessage.Command = "PING"
 		parsedMessage.Message = strings.Split(message, ":")[1]
 	} else {
 		parsedMessage = nil

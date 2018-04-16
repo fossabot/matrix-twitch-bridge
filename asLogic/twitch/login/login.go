@@ -103,7 +103,6 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient = conf.Client(ctx, tok)
 		queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient.Timeout = time.Second * 10
 
-		db.SaveUser(queryHandler.QueryHandler().RealUsers[state])
 		var p profile
 
 		resp, err := queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient.Get("https://api.twitch.tv/kraken/user?oauth_token=" + tok.AccessToken)
@@ -116,6 +115,10 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		defer resp.Body.Close()
+
+		queryHandler.QueryHandler().RealUsers[state].TwitchName = p.Name
+
+		db.SaveUser(queryHandler.QueryHandler().RealUsers[state])
 
 		err = json.NewDecoder(resp.Body).Decode(&p)
 		queryHandler.QueryHandler().RealUsers[state].TwitchWS, err = twitch2.Connect(tok.AccessToken, p.Name)

@@ -189,7 +189,7 @@ func useEvent(event appservice.Event) error {
 		}
 	}
 	util.Config.Log.Debugln("Check if we have all data needed for twitch")
-	util.Config.Log.Debugf("TwitchTokenStruct: %+v", mxUser.TwitchTokenStruct)
+	util.Config.Log.Debugln("TwitchName: ", mxUser.TwitchName)
 	if mxUser.TwitchTokenStruct != nil && mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
 		util.Config.Log.Debugln("Check if we have already a open WS")
 		if mxUser.TwitchWS == nil {

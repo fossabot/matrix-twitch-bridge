@@ -181,39 +181,44 @@ func useEvent(event appservice.Event) error {
 		}
 	}
 	db.SaveUser(mxUser, "REAL")
-	if mxUser.TwitchWS == nil {
-		if mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
+	if mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
+		if mxUser.TwitchWS == nil {
 			var err error
 			mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
 			if err != nil {
 				return err
 			}
-			for _, v := range qHandler.Aliases {
-				if v.ID == event.RoomID {
-					err = twitch.Join(mxUser.TwitchWS, v.TwitchChannel)
+		} else {
+			var err error
+			mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
+			if err != nil {
+				return err
+			}
+		}
+		for _, v := range qHandler.Aliases {
+			if v.ID == event.RoomID {
+				err := twitch.Join(mxUser.TwitchWS, v.TwitchChannel)
+				if err != nil {
+					return err
+				}
+				if event.Content["msgtype"] == "m.text" {
+					err = twitch.Send(mxUser.TwitchWS, v.TwitchChannel, event.Content["body"].(string))
+					if err != nil {
+						return err
+					}
+				} else {
+					resp, err := util.BotUser.MXClient.GetDisplayName(event.SenderID)
+					if err != nil {
+						return err
+					}
+					_, err = util.BotUser.MXClient.SendNotice(event.RoomID, resp.DisplayName+": Please use Text only as Twitch doesn't support any other Media Format!")
 					if err != nil {
 						return err
 					}
 				}
 			}
 		}
-	} else {
-		if mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
-			var err error
-			mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
-			if err != nil {
-				return err
-			}
 
-			for _, v := range qHandler.Aliases {
-				if v.ID == event.RoomID {
-					err = twitch.Join(mxUser.TwitchWS, v.TwitchChannel)
-					if err != nil {
-						return err
-					}
-				}
-			}
-		}
 	}
 	return nil
 }

@@ -73,6 +73,12 @@ func Join(WS *websocket.Conn, channel string) error {
 	return err
 }
 
+func Send(WS *websocket.Conn, channel, message string) error {
+	// Send Message
+	err := WS.WriteMessage(websocket.TextMessage, []byte("PRIVMSG #"+channel+" :"+message))
+	return err
+}
+
 // Listen answers to the PING messages by Twitch and relays messages to Matrix
 func Listen(users map[string]*user.ASUser, rooms map[string]string) {
 	go func() {

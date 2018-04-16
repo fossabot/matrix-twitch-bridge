@@ -30,6 +30,8 @@ func prepareRun() error {
 		return err
 	}
 
+	util.Config.Registration, err = appservice.LoadRegistration(util.Config.RegistrationPath)
+
 	qHandler := queryHandler.QueryHandler()
 
 	qHandler.TwitchRooms, err = db.GetTwitchRooms()

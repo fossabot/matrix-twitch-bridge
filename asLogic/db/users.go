@@ -110,20 +110,24 @@ func getUsers() (users *userTransportStruct, err error) {
 				var accessToken string
 				var tokenType string
 				var refreshToken string
-				var expiry string
+				var expiry sql.NullString
 				expiryTime := time.Time{}
 				db.QueryRow("SELECT access_token, token_type, refresh_token, expiry FROM tokens WHERE id = "+twitchTokenID.String, &accessToken, &tokenType, &refreshToken, &expiry)
 
-				err = expiryTime.UnmarshalText([]byte(expiry))
-				if err != nil {
-					return nil, err
+				if expiry.Valid {
+					err = expiryTime.UnmarshalText([]byte(expiry.String))
+					if err != nil {
+						return nil, err
+					}
 				}
 
 				TwitchToken = oauth2.Token{
 					AccessToken:  accessToken,
 					TokenType:    tokenType,
 					RefreshToken: refreshToken,
-					Expiry:       expiryTime,
+				}
+				if expiry.Valid {
+					TwitchToken.Expiry = expiryTime
 				}
 			}
 			ws, err := twitch.Connect(TwitchToken.AccessToken, twitchName)

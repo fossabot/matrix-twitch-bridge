@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
+	_ "github.com/mattn/go-sqlite3"
 	"log"
 )
 

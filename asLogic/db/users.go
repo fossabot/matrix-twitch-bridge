@@ -35,7 +35,7 @@ func SaveUser(userA interface{}, Type string) error {
 	var twitchToken string
 	var twitch_token_id int64
 
-	util.Config.Log.Debugln("Checking Type of User")
+	util.Config.Log.Debugln("Checking Type of User %+v", userA)
 	switch v := userA.(type) {
 	case user.ASUser:
 		mxid = v.Mxid
@@ -253,8 +253,9 @@ func GetBotUser() (*user.BotUser, error) {
 		return bot, nil
 	}
 
-	var userID = strings.TrimSuffix(strings.TrimPrefix(strings.Replace(util.Config.Registration.Namespaces.UserIDs[0].Regex, ".+", util.Config.Registration.SenderLocalpart, -1), "@"), ":"+util.Config.HomeserverDomain)
-	util.Config.Log.Debugln("Bot UserID: ", userID)
+	var localpart = strings.TrimSuffix(strings.TrimPrefix(strings.Replace(util.Config.Registration.Namespaces.UserIDs[0].Regex, ".+", util.Config.Registration.SenderLocalpart, -1), "@"), ":"+util.Config.HomeserverDomain)
+	var userID = strings.Replace(util.Config.Registration.Namespaces.UserIDs[0].Regex, ".+", util.Config.Registration.SenderLocalpart, -1)
+	util.Config.Log.Debugln("Bot localpart: ", localpart)
 	botUser := &user.BotUser{
 		Mxid:        userID,
 		TwitchName:  util.BotUName,
@@ -268,7 +269,7 @@ func GetBotUser() (*user.BotUser, error) {
 	}
 
 	util.Config.Log.Debugln("Creating Bot User on the HomeServer")
-	err = matrix_helper.CreateUser(client, userID)
+	err = matrix_helper.CreateUser(client, localpart)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +277,7 @@ func GetBotUser() (*user.BotUser, error) {
 	util.Config.Log.Debugln("Adding Client to Bot Struct")
 	botUser.MXClient = client
 
-	util.Config.Log.Debugln("Saving Bot User to DB")
+	util.Config.Log.Debugln("Saving Bot User to DB: %+v", botUser)
 	SaveUser(botUser, "BOT")
 
 	return botUser, nil

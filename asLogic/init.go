@@ -135,6 +135,23 @@ func Run() error {
 			case event := <-util.Config.Events:
 				util.Config.Log.Debugln("Got Event")
 				switch event.Type {
+				case "m.room.member":
+					if event.Content["membership"] == "join" {
+
+						qHandler := queryHandler.QueryHandler()
+						for _, v := range qHandler.Aliases {
+							if v.ID == event.RoomID {
+								if event.SenderID != util.BotUser.MXClient.UserID {
+									err = joinEventHandler(event)
+									if err != nil {
+										util.Config.Log.Errorln(err)
+									}
+								}
+							}
+						}
+						continue
+
+					}
 				case "m.room.message":
 
 					qHandler := queryHandler.QueryHandler()
@@ -161,12 +178,9 @@ func Run() error {
 	select {}
 }
 
-func useEvent(event appservice.Event) error {
+func joinEventHandler(event appservice.Event) error {
 	qHandler := queryHandler.QueryHandler()
 	mxUser := qHandler.RealUsers[event.SenderID]
-
-	util.Config.Log.Infoln("Processing Event")
-	// TODO move real User creation to join event!
 	if mxUser == nil {
 		util.Config.Log.Debugln("Creating new User")
 
@@ -180,6 +194,7 @@ func useEvent(event appservice.Event) error {
 			return err
 		}
 		db.SaveUser(mxUser)
+
 		return nil
 	} else if mxUser.TwitchTokenStruct == nil {
 		util.Config.Log.Debugln("Let new User Login (he already exists)")
@@ -188,8 +203,15 @@ func useEvent(event appservice.Event) error {
 			return err
 		}
 	}
-	util.Config.Log.Debugln("Check if we have all data needed for twitch")
-	util.Config.Log.Debugln("TwitchName: ", mxUser.TwitchName)
+	return nil
+}
+
+func useEvent(event appservice.Event) error {
+	qHandler := queryHandler.QueryHandler()
+	mxUser := qHandler.RealUsers[event.SenderID]
+
+	util.Config.Log.Infoln("Processing Event")
+
 	util.Config.Log.Debugln("Check if we have already a open WS")
 	if mxUser.TwitchWS == nil {
 		if mxUser.TwitchTokenStruct != nil && mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {

@@ -48,10 +48,6 @@ func prepareRun() error {
 		return err
 	}
 
-	for v := range qHandler.TwitchRooms {
-		twitch.Join(util.BotUser.TwitchWS, v)
-	}
-
 	util.Config.Log.Debugln("Loading Rooms from DB.")
 	qHandler.Aliases, err = db.GetRooms()
 	if err != nil {
@@ -126,6 +122,10 @@ func Run() error {
 	}
 
 	twitch.Listen(queryHandler.QueryHandler().TwitchUsers, queryHandler.QueryHandler().TwitchRooms)
+
+	for v := range queryHandler.QueryHandler().TwitchRooms {
+		twitch.Join(util.BotUser.TwitchWS, v)
+	}
 
 	for {
 		select {

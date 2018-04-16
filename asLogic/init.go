@@ -136,26 +136,19 @@ func Run() error {
 				util.Config.Log.Debugln("Got Event")
 				switch event.Type {
 				case "m.room.message":
+
 					qHandler := queryHandler.QueryHandler()
-					mxUser := qHandler.RealUsers[event.SenderID]
-					if mxUser == nil {
-						mxUser = &user.RealUser{}
-						mxUser.Mxid = event.SenderID
-						db.SaveUser(mxUser, "REAL")
-						login.SendLoginURL(mxUser)
-						continue
-					} else if mxUser.TwitchTokenStruct == nil {
-						login.SendLoginURL(mxUser)
-					}
-					if mxUser.TwitchWS == nil {
-						if mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
-							mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
-							if err != nil {
-								util.Config.Log.Errorln(err)
-								continue
+					for _, v := range qHandler.Aliases {
+						if v.ID == event.ID {
+							if event.SenderID != util.BotUser.MXClient.UserID {
+								err = useEvent(event)
+								if err != nil {
+									util.Config.Log.Errorln(err)
+								}
 							}
 						}
 					}
+					continue
 
 				}
 			}
@@ -166,4 +159,28 @@ func Run() error {
 	util.Config.Listen()
 
 	select {}
+}
+
+func useEvent(event appservice.Event) error {
+	qHandler := queryHandler.QueryHandler()
+	mxUser := qHandler.RealUsers[event.SenderID]
+	if mxUser == nil {
+		mxUser = &user.RealUser{}
+		mxUser.Mxid = event.SenderID
+		db.SaveUser(mxUser, "REAL")
+		login.SendLoginURL(mxUser)
+		return nil
+	} else if mxUser.TwitchTokenStruct == nil {
+		login.SendLoginURL(mxUser)
+	}
+	if mxUser.TwitchWS == nil {
+		if mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
+			var err error
+			mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

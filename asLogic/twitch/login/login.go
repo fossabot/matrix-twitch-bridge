@@ -92,12 +92,13 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 	code, cok := query["code"]
 	state, sok := query["state"]
 	if sok && cok {
+		util.Config.Log.Debugln(state)
 		tok, err := conf.Exchange(ctx, code[0])
 		if err != nil {
 			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-		util.Config.Log.Debugf("%+v", tok)
+		util.Config.Log.Debugf("%+v\n", tok)
 		queryHandler.QueryHandler().RealUsers[state[0]].TwitchTokenStruct = tok
 		queryHandler.QueryHandler().RealUsers[state[0]].TwitchHTTPClient = conf.Client(ctx, tok)
 		queryHandler.QueryHandler().RealUsers[state[0]].TwitchHTTPClient.Timeout = time.Second * 10

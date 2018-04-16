@@ -79,6 +79,7 @@ func prepareRun() error {
 	}
 
 	util.Config.Log.Infoln("Init...")
+	util.Config.Log.Close()
 	_, err = util.Config.Init(qHandler)
 	if err != nil {
 		log.Fatalln(err)

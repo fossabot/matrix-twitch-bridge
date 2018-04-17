@@ -201,15 +201,7 @@ func joinEventHandler(event appservice.Event) error {
 		if err != nil {
 			return err
 		}
-		db.SaveUser(mxUser)
-
 		return nil
-	} else if mxUser.TwitchTokenStruct == nil {
-		util.Config.Log.Debugln("Let new User Login (he already exists)")
-		err := login.SendLoginURL(mxUser)
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }

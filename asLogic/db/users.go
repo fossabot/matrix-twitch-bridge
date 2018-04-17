@@ -104,6 +104,7 @@ func getUsers() (users *userTransportStruct, err error) {
 
 		switch Type {
 		case "AS":
+			util.Config.Log.Debugln("mxid:", mxid)
 			ASUser := &user.ASUser{
 				Mxid:       mxid,
 				TwitchName: twitchName,

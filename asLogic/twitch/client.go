@@ -112,7 +112,10 @@ func Listen() {
 						util.Config.Log.Errorln(err)
 						return
 					}
-					if _, ok := joinedResp.Joined[queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username].Mxid]; !ok {
+					util.Config.Log.Debugln(joinedResp.Joined)
+					mxid := queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username].Mxid
+					util.Config.Log.Debugln(mxid)
+					if _, ok := joinedResp.Joined[mxid]; !ok {
 						queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username].MXClient.JoinRoom(room, "", nil)
 					}
 

@@ -12,6 +12,7 @@ import (
 	"github.com/matrix-org/gomatrix"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/twitch"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -115,7 +116,10 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		}
 		defer resp.Body.Close()
 
-		err = json.NewDecoder(resp.Body).Decode(&p)
+		body, err := ioutil.ReadAll(resp.Body)
+		util.Config.Log.Debugln("body: ", body)
+
+		err = json.Unmarshal([]byte(body), &p)
 		if err != nil {
 			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)

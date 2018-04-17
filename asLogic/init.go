@@ -244,15 +244,10 @@ func useEvent(event appservice.Event) error {
 	for _, v := range qHandler.Aliases {
 		if v.ID == event.RoomID {
 
-			util.Config.Log.Debugln("Join Twitch Channel")
-			err := join.Join(mxUser.TwitchWS, v.TwitchChannel)
-			if err != nil {
-				return err
-			}
 			util.Config.Log.Debugln("Check if text or other Media")
 			if event.Content["msgtype"] == "m.text" {
 				util.Config.Log.Debugln("Send message to twitch")
-				err = twitch.Send(mxUser.TwitchWS, v.TwitchChannel, event.Content["body"].(string))
+				err := twitch.Send(mxUser.TwitchWS, v.TwitchChannel, event.Content["body"].(string))
 				if err != nil {
 					return err
 				}

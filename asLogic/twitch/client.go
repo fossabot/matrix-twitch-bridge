@@ -55,7 +55,7 @@ func Listen() {
 							// name magic
 							pre := strings.Split(v.Regex, ".+")[0]
 							suff := strings.Split(v.Regex, ".+")[1]
-							asUser := &user.ASUser{}
+							asUser = &user.ASUser{}
 							asUser.Mxid = pre + parsedMessage.Username + suff
 							util.Config.Log.Debugln(asUser.Mxid)
 							MXusername := strings.Split(strings.TrimPrefix(asUser.Mxid, "@"), ":")[0]

@@ -24,7 +24,7 @@ func SendLoginURL(ruser *user.RealUser) error {
 		conf = &oauth2.Config{
 			ClientID:     util.ClientID,
 			ClientSecret: util.ClientSecret,
-			Scopes:       []string{"chat_login"},
+			Scopes:       []string{"chat_login", "user_read"},
 			RedirectURL:  "https://" + util.Publicaddress + "/callback",
 			Endpoint:     twitch.Endpoint,
 		}
@@ -104,11 +104,8 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient.Timeout = time.Second * 10
 
 		var p profile
-		util.Config.Log.Debugln(tok.AccessToken)
 
 		req, err := http.NewRequest("GET", "https://api.twitch.tv/kraken/user?oauth_token="+tok.AccessToken, nil)
-		//req.Header.Add("Authorization", "OAuth "+tok.AccessToken)
-		//req.Header.Add("Accept", "application/vnd.twitchtv.v5+json")
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
@@ -122,7 +119,6 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		defer resp.Body.Close()
 
 		body, err := ioutil.ReadAll(resp.Body)
-		util.Config.Log.Debugf("body: %s\n", body)
 
 		err = json.Unmarshal(body, &p)
 		if err != nil {

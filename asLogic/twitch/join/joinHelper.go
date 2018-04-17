@@ -8,7 +8,7 @@ import (
 
 func Join(WS *websocket.Conn, channel string) error {
 	// Join Room
-	join := "JOIN #" + channel
+	join := "JOIN #" + channel + "\r\n"
 	util.Config.Log.Debugln("Join Command: ", join)
 	joinByte := []byte(join)
 	util.Config.Log.Debugln("Join Command Bytes: ", join)

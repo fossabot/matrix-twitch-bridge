@@ -45,19 +45,19 @@ func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
 	}
 
 	// Request needed IRC Capabilities https://dev.twitch.tv/docs/irc/#twitch-specific-irc-capabilities
-	sendErr := WS.WriteMessage(websocket.TextMessage, []byte("CAP REQ :twitch.tv/membership twitch.tv/tags"))
+	sendErr := WS.WriteMessage(websocket.TextMessage, []byte("CAP REQ :twitch.tv/membership twitch.tv/tags\r\n"))
 	if sendErr != nil {
 		err = sendErr
 		return
 	}
 
 	// Login
-	sendErr = WS.WriteMessage(websocket.TextMessage, []byte("PASS oauth:"+oauthToken))
+	sendErr = WS.WriteMessage(websocket.TextMessage, []byte("PASS oauth:"+oauthToken+"\r\n"))
 	if sendErr != nil {
 		err = sendErr
 		return
 	}
-	sendErr = WS.WriteMessage(websocket.TextMessage, []byte("NICK "+username))
+	sendErr = WS.WriteMessage(websocket.TextMessage, []byte("NICK "+username+"\r\n"))
 	if sendErr != nil {
 		err = sendErr
 		return

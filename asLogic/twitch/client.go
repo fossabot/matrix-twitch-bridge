@@ -17,7 +17,7 @@ import (
 func Send(WS *websocket.Conn, channel, message string) error {
 	// Send Message
 	util.Config.Log.Debugln(channel)
-	err := WS.WriteMessage(websocket.TextMessage, []byte("PRIVMSG #"+channel+" :"+message))
+	err := WS.WriteMessage(websocket.TextMessage, []byte("PRIVMSG #"+channel+" :"+message+"\r\n"))
 	return err
 }
 
@@ -122,7 +122,7 @@ func Listen() {
 					asUser.MXClient.SendText(room, parsedMessage.Message)
 				case "PING":
 					util.Config.Log.Debugln("[TWITCH]: Respond to Ping")
-					util.BotUser.TwitchWS.WriteControl(websocket.PongMessage, []byte(""), time.Now().Add(10*time.Second))
+					util.BotUser.TwitchWS.WriteControl(websocket.PongMessage, []byte("\r\n"), time.Now().Add(10*time.Second))
 				default:
 					util.Config.Log.Debugf("[TWITCH]: %+v\n", parsedMessage)
 				}

@@ -44,6 +44,7 @@ func SaveUser(userA interface{}) error {
 	case *user.RealUser:
 		mxid = v.Mxid
 		Type = "REAL"
+		util.Config.Log.Debugln(v.TwitchName)
 		twitchName = v.TwitchName
 		if v.TwitchTokenStruct != nil {
 			expiry, err := v.TwitchTokenStruct.Expiry.MarshalText()

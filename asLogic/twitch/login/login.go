@@ -104,10 +104,11 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient.Timeout = time.Second * 10
 
 		var p profile
+		util.Config.Log.Debugln(tok.AccessToken)
 
-		req, err := http.NewRequest("GET", "https://api.twitch.tv/kraken/user", nil)
-		req.Header.Add("Authorization", "OAuth "+tok.AccessToken)
-		req.Header.Add("Accept", "application/vnd.twitchtv.v5+json")
+		req, err := http.NewRequest("GET", "https://api.twitch.tv/kraken/user?oauth_token="+tok.AccessToken, nil)
+		//req.Header.Add("Authorization", "OAuth "+tok.AccessToken)
+		//req.Header.Add("Accept", "application/vnd.twitchtv.v5+json")
 		resp, err := queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient.Do(req)
 		if err != nil {
 			util.Config.Log.Errorln(err)

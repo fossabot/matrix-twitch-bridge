@@ -42,6 +42,16 @@ func Listen() {
 			if parsedMessage != nil {
 				switch parsedMessage.Command {
 				case "PRIVMSG":
+					real := false
+					for _, v := range queryHandler.QueryHandler().RealUsers {
+						if parsedMessage.Username == v.TwitchName {
+							real = true
+							break
+						}
+					}
+					if real {
+						continue
+					}
 					room := queryHandler.QueryHandler().TwitchRooms[strings.TrimPrefix(parsedMessage.Channel, "#")]
 					asUser := queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username]
 

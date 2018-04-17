@@ -17,7 +17,12 @@ import (
 func Send(WS *websocket.Conn, channel, messageRaw string) error {
 	// Send Message
 	message := "PRIVMSG #" + channel + " :" + messageRaw + "\r\n"
-	err := WS.WriteMessage(websocket.TextMessage, []byte(message))
+	deadline := time.Now().Add(time.Second * 5)
+	err := WS.SetWriteDeadline(deadline)
+	if err != nil {
+		return err
+	}
+	err = WS.WriteMessage(websocket.TextMessage, []byte(message))
 	return err
 }
 

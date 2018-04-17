@@ -87,6 +87,7 @@ func Listen() {
 							client.SetAvatarURL(resp.ContentURI)
 
 							queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username] = asUser
+							queryHandler.QueryHandler().Users[parsedMessage.Username] = asUser
 							err = db.SaveUser(queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username])
 							if err != nil {
 								util.Config.Log.Errorln(err)
@@ -128,18 +129,11 @@ func parseMessage(message string) (parsedMessage *util.TMessage) {
 	if strings.HasPrefix(message, "@") {
 		messageSplit := strings.Split(message, " ")
 		parsedMessage.Tags = strings.TrimSpace(messageSplit[0])
-		util.Config.Log.Debugln("Tags: ", parsedMessage.Tags)
 		parsedMessage.Username = strings.Split(strings.TrimLeft(strings.TrimSpace(messageSplit[1]), ":"), "!")[0]
-		util.Config.Log.Debugln("Username: ", parsedMessage.Username)
 		parsedMessage.Command = strings.TrimSpace(messageSplit[2])
-		util.Config.Log.Debugln("Command: ", parsedMessage.Command)
 		parsedMessage.Channel = strings.TrimSpace(messageSplit[3])
-		util.Config.Log.Debugln("Channel: ", parsedMessage.Channel)
-		util.Config.Log.Debugln("rawMessageText CUT: ", messageSplit[0]+" "+messageSplit[1]+" "+messageSplit[2]+" "+messageSplit[3]+" ")
 		rawMessageText := strings.TrimPrefix(message, messageSplit[0]+" "+messageSplit[1]+" "+messageSplit[2]+" "+messageSplit[3]+" ")
-		util.Config.Log.Debugln("rawMessageText: ", rawMessageText)
 		parsedMessage.Message = strings.TrimLeft(strings.TrimSpace(rawMessageText), ":")
-		util.Config.Log.Debugln("Message: ", parsedMessage.Message)
 	} else if strings.HasPrefix(message, "PING") {
 		parsedMessage.Command = "PING"
 		parsedMessage.Message = strings.Split(message, ":")[1]

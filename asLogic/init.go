@@ -184,6 +184,7 @@ func joinEventHandler(event appservice.Event) error {
 	qHandler := queryHandler.QueryHandler()
 	mxUser := qHandler.RealUsers[event.SenderID]
 	asUser := qHandler.Users[event.SenderID]
+	util.Config.Log.Debugf("AS User: %+v\n", asUser)
 	if asUser != nil || util.BotUser.Mxid == event.SenderID {
 		return nil
 	}
@@ -216,6 +217,7 @@ func useEvent(event appservice.Event) error {
 	qHandler := queryHandler.QueryHandler()
 	mxUser := qHandler.RealUsers[event.SenderID]
 	asUser := qHandler.Users[event.SenderID]
+	util.Config.Log.Debugf("AS User: %+v\n", asUser)
 	if asUser != nil || util.BotUser.Mxid == event.SenderID {
 		return nil
 	}

@@ -65,5 +65,11 @@ func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
 		return
 	}
 
+	WS.SetCloseHandler(func(code int, text string) error {
+		WS.Close()
+		Connect(oauthToken, username)
+		return nil
+	})
+
 	return
 }

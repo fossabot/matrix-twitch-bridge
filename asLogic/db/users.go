@@ -46,6 +46,7 @@ func SaveUser(userA interface{}) error {
 		Type = "REAL"
 		util.Config.Log.Debugln(v.TwitchName)
 		twitchName = v.TwitchName
+		util.Config.Log.Debugf("TwitchTokenStructSave: %+v", v.TwitchTokenStruct)
 		if v.TwitchTokenStruct != nil {
 			expiry, err := v.TwitchTokenStruct.Expiry.MarshalText()
 			if err != nil {
@@ -112,6 +113,7 @@ func getUsers() (users *userTransportStruct, err error) {
 			transportStruct.ASUsers = append(transportStruct.ASUsers, ASUser)
 		case "REAL":
 			var TwitchToken *oauth2.Token
+			util.Config.Log.Debugf("twitchTokenID: %+v", twitchTokenID)
 			if twitchTokenID.Valid {
 				var accessToken string
 				var tokenType string
@@ -132,6 +134,7 @@ func getUsers() (users *userTransportStruct, err error) {
 					TokenType:    tokenType,
 					RefreshToken: refreshToken,
 				}
+				util.Config.Log.Debugf("TwitchToken: %+v", TwitchToken)
 				if expiry.Valid {
 					TwitchToken.Expiry = expiryTime
 				}

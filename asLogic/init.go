@@ -218,7 +218,7 @@ func useEvent(event appservice.Event) error {
 	mxUser := qHandler.RealUsers[event.SenderID]
 	asUser := qHandler.Users[event.SenderID]
 	util.Config.Log.Debugf("AS User: %+v\n", asUser)
-	if asUser != nil || util.BotUser.Mxid == event.SenderID {
+	if asUser != nil || util.BotUser.Mxid == event.SenderID || mxUser == nil {
 		return nil
 	}
 

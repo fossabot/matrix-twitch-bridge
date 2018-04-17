@@ -184,7 +184,6 @@ func GetASUsers() (map[string]*user.ASUser, error) {
 	if err != nil {
 		return nil, err
 	}
-	util.Config.Log.Debugf("dbResp: %+v\n", dbResp)
 	for _, v := range dbResp.ASUsers {
 		if v.MXClient == nil {
 			client, err := gomatrix.NewClient(util.Config.HomeserverURL, v.Mxid, util.Config.Registration.AppToken)
@@ -196,6 +195,7 @@ func GetASUsers() (map[string]*user.ASUser, error) {
 		}
 		ASMap[v.Mxid] = v
 	}
+	util.Config.Log.Debugf("ASMap: %+v\n", ASMap)
 
 	return ASMap, nil
 }
@@ -208,7 +208,6 @@ func GetTwitchUsers() (map[string]*user.ASUser, error) {
 	if err != nil {
 		return nil, err
 	}
-	util.Config.Log.Debugf("dbResp: %+v\n", dbResp)
 	for _, v := range dbResp.ASUsers {
 		if v.MXClient == nil {
 			client, err := gomatrix.NewClient(util.Config.HomeserverURL, v.Mxid, util.Config.Registration.AppToken)
@@ -220,6 +219,7 @@ func GetTwitchUsers() (map[string]*user.ASUser, error) {
 		}
 		TwitchMap[v.TwitchName] = v
 	}
+	util.Config.Log.Debugf("TwitchMap: %+v\n", TwitchMap)
 
 	return TwitchMap, nil
 }

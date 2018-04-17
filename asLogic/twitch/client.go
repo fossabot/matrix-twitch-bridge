@@ -14,10 +14,11 @@ import (
 	"time"
 )
 
-func Send(WS *websocket.Conn, channel, message string) error {
+func Send(WS *websocket.Conn, channel, messageRaw string) error {
 	// Send Message
-	util.Config.Log.Debugln(channel)
-	err := WS.WriteMessage(websocket.TextMessage, []byte("PRIVMSG #"+channel+" :"+message+"\r\n"))
+	message := "PRIVMSG #" + channel + " :" + messageRaw + "\r\n"
+	util.Config.Log.Debugln("Message: ", message)
+	err := WS.WriteMessage(websocket.TextMessage, []byte(message))
 	return err
 }
 

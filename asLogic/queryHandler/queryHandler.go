@@ -88,7 +88,10 @@ func (q queryHandler) QueryAlias(alias string) bool {
 	if err != nil {
 		util.Config.Log.Errorln(err)
 	}
+
+	util.BotUser.Mux.Lock()
 	err = join.Join(util.BotUser.TwitchWS, tUsername)
+	util.BotUser.Mux.Unlock()
 	if err != nil {
 		util.Config.Log.Errorln(err)
 	}

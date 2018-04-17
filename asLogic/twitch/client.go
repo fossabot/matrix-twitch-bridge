@@ -122,7 +122,9 @@ func Listen() {
 					asUser.MXClient.SendText(room, parsedMessage.Message)
 				case "PING":
 					util.Config.Log.Debugln("[TWITCH]: Respond to Ping")
+					util.BotUser.Mux.Lock()
 					util.BotUser.TwitchWS.WriteControl(websocket.PongMessage, []byte("\r\n"), time.Now().Add(10*time.Second))
+					util.BotUser.Mux.Unlock()
 				default:
 					util.Config.Log.Debugf("[TWITCH]: %+v\n", parsedMessage)
 				}

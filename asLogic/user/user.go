@@ -5,6 +5,7 @@ import (
 	"github.com/matrix-org/gomatrix"
 	"golang.org/x/oauth2"
 	"net/http"
+	"sync"
 )
 
 // ASUser contains the required Information for a User managed by the Appservice and holds a Matrix Client
@@ -24,6 +25,7 @@ type RealUser struct {
 	TwitchWS          *websocket.Conn
 	// Room holds a ID of a room with the Real User and the Bot
 	Room string
+	Mux  sync.Mutex
 }
 
 // BotUser contains the required Information for a Bot User
@@ -33,5 +35,6 @@ type BotUser struct {
 	TwitchName  string
 	TwitchToken string
 	TwitchWS    *websocket.Conn
+	Mux         sync.Mutex
 	MXClient    *gomatrix.Client
 }

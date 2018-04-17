@@ -125,7 +125,9 @@ func Run() error {
 	twitch.Listen()
 
 	for v := range queryHandler.QueryHandler().TwitchRooms {
+		util.BotUser.Mux.Lock()
 		err = join.Join(util.BotUser.TwitchWS, v)
+		util.BotUser.Mux.Unlock()
 		if err != nil {
 			return err
 		}
@@ -246,7 +248,10 @@ func useEvent(event appservice.Event) error {
 			util.Config.Log.Debugln("Check if text or other Media")
 			if event.Content["msgtype"] == "m.text" {
 				util.Config.Log.Debugln("Send message to twitch")
+
+				util.BotUser.Mux.Lock()
 				err := twitch.Send(mxUser.TwitchWS, v.TwitchChannel, event.Content["body"].(string))
+				util.BotUser.Mux.Unlock()
 				if err != nil {
 					return err
 				}

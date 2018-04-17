@@ -122,7 +122,6 @@ func Run() error {
 	}
 
 	util.Config.Log.Debugln("Start letting BotUser listen to Twitch")
-	// Todo make TwitchRooms map somehow direct accessible from Listen
 	twitch.Listen()
 
 	for v := range queryHandler.QueryHandler().TwitchRooms {

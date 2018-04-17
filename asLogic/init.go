@@ -184,7 +184,7 @@ func joinEventHandler(event appservice.Event) error {
 	qHandler := queryHandler.QueryHandler()
 	mxUser := qHandler.RealUsers[event.SenderID]
 	asUser := qHandler.Users[event.SenderID]
-	if asUser != nil {
+	if asUser != nil || util.BotUser.Mxid == event.SenderID {
 		return nil
 	}
 	if mxUser == nil {
@@ -215,6 +215,10 @@ func joinEventHandler(event appservice.Event) error {
 func useEvent(event appservice.Event) error {
 	qHandler := queryHandler.QueryHandler()
 	mxUser := qHandler.RealUsers[event.SenderID]
+	asUser := qHandler.Users[event.SenderID]
+	if asUser != nil || util.BotUser.Mxid == event.SenderID {
+		return nil
+	}
 
 	util.Config.Log.Infoln("Processing Event")
 

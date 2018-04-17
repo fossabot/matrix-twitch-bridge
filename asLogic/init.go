@@ -216,6 +216,7 @@ func useEvent(event appservice.Event) error {
 
 	util.Config.Log.Debugln("Check if we have already a open WS")
 	if mxUser.TwitchWS == nil {
+		util.Config.Log.Debugf("%+v\n", mxUser.TwitchTokenStruct)
 		if mxUser.TwitchTokenStruct != nil && mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
 			var err error
 

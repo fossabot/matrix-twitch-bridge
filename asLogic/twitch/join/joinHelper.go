@@ -1,15 +1,17 @@
 //Used to prevent import cycle
 package join
 
-import "github.com/gorilla/websocket"
+import (
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
+	"github.com/gorilla/websocket"
+)
 
 func Join(WS *websocket.Conn, channel string) error {
-	// Part Room
-	err := WS.WriteMessage(websocket.TextMessage, []byte("PART #"+channel))
-	if err != nil {
-		return err
-	}
 	// Join Room
-	err = WS.WriteMessage(websocket.TextMessage, []byte("JOIN #"+channel))
+	join := "JOIN #" + channel
+	util.Config.Log.Debugln("Join Command: ", join)
+	joinByte := []byte(join)
+	util.Config.Log.Debugln("Join Command Bytes: ", join)
+	err := WS.WriteMessage(websocket.TextMessage, joinByte)
 	return err
 }

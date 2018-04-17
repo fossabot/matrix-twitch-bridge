@@ -135,8 +135,9 @@ func parseMessage(message string) (parsedMessage *util.TMessage) {
 		util.Config.Log.Debugln("Command: ", parsedMessage.Command)
 		parsedMessage.Channel = strings.TrimSpace(messageSplit[3])
 		util.Config.Log.Debugln("Channel: ", parsedMessage.Channel)
-		util.Config.Log.Debugln("messageSplit[4]: ", messageSplit[4])
-		parsedMessage.Message = strings.TrimLeft(strings.TrimSpace(messageSplit[4]), ":")
+		rawMessageText := strings.TrimPrefix(message, messageSplit[0]+messageSplit[1]+messageSplit[2]+messageSplit[3])
+		util.Config.Log.Debugln("messageSplit[4]: ", rawMessageText)
+		parsedMessage.Message = strings.TrimLeft(strings.TrimSpace(rawMessageText), ":")
 		util.Config.Log.Debugln("Message: ", parsedMessage.Message)
 	} else if strings.HasPrefix(message, "PING") {
 		parsedMessage.Command = "PING"

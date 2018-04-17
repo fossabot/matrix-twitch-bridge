@@ -102,11 +102,8 @@ func getUsers() (users *userTransportStruct, err error) {
 			return nil, err
 		}
 
-		util.Config.Log.Debugln("type:", Type)
-
 		switch Type {
 		case "AS":
-			util.Config.Log.Debugln("mxid:", mxid)
 			ASUser := &user.ASUser{
 				Mxid:       mxid,
 				TwitchName: twitchName,
@@ -193,6 +190,7 @@ func GetASUsers() (map[string]*user.ASUser, error) {
 			if err != nil {
 				return nil, err
 			}
+			client.AppServiceUserID = v.Mxid
 
 			v.MXClient = client
 		}
@@ -216,6 +214,7 @@ func GetTwitchUsers() (map[string]*user.ASUser, error) {
 			if err != nil {
 				return nil, err
 			}
+			client.AppServiceUserID = v.Mxid
 
 			v.MXClient = client
 		}

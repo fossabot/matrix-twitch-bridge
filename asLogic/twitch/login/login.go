@@ -117,9 +117,9 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		defer resp.Body.Close()
 
 		body, err := ioutil.ReadAll(resp.Body)
-		util.Config.Log.Debugln("body: ", body)
+		util.Config.Log.Debugf("body: %s\n", body)
 
-		err = json.Unmarshal([]byte(body), &p)
+		err = json.Unmarshal(body, &p)
 		if err != nil {
 			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)

@@ -40,7 +40,7 @@ func Listen() {
 					room := queryHandler.QueryHandler().TwitchRooms[strings.TrimPrefix(parsedMessage.Channel, "#")]
 					asUser := queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username]
 
-					util.Config.Log.Debugf("asUser: %+v\n", asUser)
+					util.Config.Log.Debugf("asUser: %+v\n", asUser.MXClient.UserID)
 
 					//Create AS User if needed and invite to room
 					if asUser == nil {

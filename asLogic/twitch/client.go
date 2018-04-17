@@ -49,7 +49,7 @@ func Listen() {
 							return
 						}
 
-						for _, v := range util.Config.Registration.Namespaces.RoomAliases {
+						for _, v := range util.Config.Registration.Namespaces.UserIDs {
 							// name magic
 							pre := strings.Split(v.Regex, ".+")[0]
 							suff := strings.Split(v.Regex, ".+")[1]

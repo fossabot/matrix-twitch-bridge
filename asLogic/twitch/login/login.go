@@ -122,6 +122,7 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		}
 
 		queryHandler.QueryHandler().RealUsers[state].TwitchName = p.Name
+		util.Config.Log.Debugln(p.Name)
 
 		db.SaveUser(queryHandler.QueryHandler().RealUsers[state])
 

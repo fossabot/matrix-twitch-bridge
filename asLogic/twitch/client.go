@@ -64,6 +64,7 @@ func Listen() {
 								return
 							}
 							asUser.MXClient = client
+							asUser.TwitchName = parsedMessage.Username
 
 							err = matrix_helper.CreateUser(client, MXusername)
 							if err != nil {

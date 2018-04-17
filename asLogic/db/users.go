@@ -195,7 +195,6 @@ func GetASUsers() (map[string]*user.ASUser, error) {
 		}
 		ASMap[v.Mxid] = v
 	}
-	util.Config.Log.Debugf("ASMap: %+v\n", ASMap)
 
 	return ASMap, nil
 }
@@ -219,7 +218,6 @@ func GetTwitchUsers() (map[string]*user.ASUser, error) {
 		}
 		TwitchMap[v.TwitchName] = v
 	}
-	util.Config.Log.Debugf("TwitchMap: %+v\n", TwitchMap)
 
 	return TwitchMap, nil
 }

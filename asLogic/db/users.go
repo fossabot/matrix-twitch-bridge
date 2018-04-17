@@ -102,6 +102,8 @@ func getUsers() (users *userTransportStruct, err error) {
 			return nil, err
 		}
 
+		util.Config.Log.Debugln("type:", Type)
+
 		switch Type {
 		case "AS":
 			util.Config.Log.Debugln("mxid:", mxid)

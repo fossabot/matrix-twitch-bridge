@@ -105,7 +105,10 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 
 		var p profile
 
-		resp, err := queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient.Get("https://api.twitch.tv/kraken/user?oauth_token=" + tok.AccessToken)
+		req, err := http.NewRequest("GRT", "https://api.twitch.tv/kraken/user", nil)
+		req.Header.Add("Authorization", "OAuth "+tok.AccessToken)
+		req.Header.Add("Accept", "application/vnd.twitchtv.v5+json")
+		resp, err := queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient.Do(req)
 		if err != nil {
 			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)

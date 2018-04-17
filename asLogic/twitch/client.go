@@ -87,7 +87,7 @@ func Listen() {
 							client.SetAvatarURL(resp.ContentURI)
 
 							queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username] = asUser
-							queryHandler.QueryHandler().Users[parsedMessage.Username] = asUser
+							queryHandler.QueryHandler().Users[asUser.Mxid] = asUser
 							err = db.SaveUser(queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username])
 							if err != nil {
 								util.Config.Log.Errorln(err)

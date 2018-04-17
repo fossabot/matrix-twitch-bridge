@@ -251,6 +251,12 @@ func useEvent(event appservice.Event) error {
 
 				util.BotUser.Mux.Lock()
 				err := twitch.Send(mxUser.TwitchWS, v.TwitchChannel, event.Content["body"].(string))
+				_, message, err := mxUser.TwitchWS.ReadMessage()
+				if err != nil {
+					return err
+				}
+
+				util.Config.Log.Debugf("recv after Send: %s\n", message)
 				util.BotUser.Mux.Unlock()
 				if err != nil {
 					return err

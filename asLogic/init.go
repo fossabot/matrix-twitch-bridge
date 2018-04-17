@@ -183,6 +183,10 @@ func Run() error {
 func joinEventHandler(event appservice.Event) error {
 	qHandler := queryHandler.QueryHandler()
 	mxUser := qHandler.RealUsers[event.SenderID]
+	asUser := qHandler.Users[event.SenderID]
+	if asUser != nil {
+		return nil
+	}
 	if mxUser == nil {
 		util.Config.Log.Debugln("Creating new User")
 

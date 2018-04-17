@@ -37,7 +37,7 @@ func Listen() {
 			if parsedMessage != nil {
 				switch parsedMessage.Command {
 				case "PRIVMSG":
-					room := queryHandler.QueryHandler().TwitchRooms[parsedMessage.Channel]
+					room := queryHandler.QueryHandler().TwitchRooms[strings.TrimPrefix(parsedMessage.Channel, "#")]
 					//Create AS User if needed and invite to room
 					if queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username] == nil {
 						check, err := api.CheckTwitchUser(parsedMessage.Username)

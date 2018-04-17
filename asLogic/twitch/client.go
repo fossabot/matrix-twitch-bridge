@@ -18,6 +18,7 @@ func Send(WS *websocket.Conn, channel, messageRaw string) error {
 	// Send Message
 	message := "PRIVMSG #" + channel + " :" + messageRaw + "\r\n"
 	util.Config.Log.Debugln("Message: ", message)
+	util.Config.Log.Debugf("WS: %+v\n", WS)
 	err := WS.WriteMessage(websocket.TextMessage, []byte(message))
 	return err
 }

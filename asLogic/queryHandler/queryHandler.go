@@ -75,6 +75,8 @@ func (q queryHandler) QueryAlias(alias string) bool {
 		return false
 	}
 
+	// TODO PUBLISH TO ROOM DICT
+
 	troom := &room.Room{
 		Alias:         alias,
 		ID:            resp.RoomID,

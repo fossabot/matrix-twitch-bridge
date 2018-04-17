@@ -82,9 +82,18 @@ func Listen() {
 								util.Config.Log.Errorln("user missing")
 								return
 							}
-							client.SetDisplayName(userdata.Users[0].DisplayName)
+							err = client.SetDisplayName(userdata.Users[0].DisplayName)
+							if err != nil {
+								util.Config.Log.Errorln(err)
+							}
 							resp, err := client.UploadLink(userdata.Users[0].Logo)
-							client.SetAvatarURL(resp.ContentURI)
+							if err != nil {
+								util.Config.Log.Errorln(err)
+							}
+							err = client.SetAvatarURL(resp.ContentURI)
+							if err != nil {
+								util.Config.Log.Errorln(err)
+							}
 
 							queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username] = asUser
 							queryHandler.QueryHandler().Users[asUser.Mxid] = asUser
@@ -97,7 +106,6 @@ func Listen() {
 					}
 
 					// Check if user needs to join the room
-					util.Config.Log.Debugln("room: ", room)
 					joinedResp, err := util.BotUser.MXClient.JoinedMembers(room)
 					if err != nil {
 						util.Config.Log.Errorln(err)

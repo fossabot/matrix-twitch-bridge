@@ -4,6 +4,7 @@ package connect
 import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/gorilla/websocket"
+	"net"
 	"os"
 	"os/signal"
 	"time"
@@ -19,7 +20,15 @@ func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
 		util.Done = make(chan struct{})
 	}
 
-	dialer := websocket.DefaultDialer
+	dialer := &websocket.Dialer{
+		NetDial: func(network, addr string) (net.Conn, error) {
+			netDialer := &net.Dialer{
+				KeepAlive: time.Minute * 60,
+			}
+			return netDialer.Dial(network, addr)
+		},
+		HandshakeTimeout: 45 * time.Second,
+	}
 	WS, _, err = dialer.Dial("wss://irc-ws.chat.twitch.tv:443/irc", nil)
 
 	go func() {

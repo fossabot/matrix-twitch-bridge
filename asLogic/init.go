@@ -155,14 +155,13 @@ func Run() error {
 
 					}
 				case "m.room.message":
-
 					qHandler := queryHandler.QueryHandler()
 					for _, v := range qHandler.Aliases {
 						if v.ID == event.RoomID {
 							if event.SenderID != util.BotUser.MXClient.UserID {
 								err = useEvent(event)
 								if err != nil {
-									panic(err)
+									util.Config.Log.Errorln(err)
 								}
 							}
 						}

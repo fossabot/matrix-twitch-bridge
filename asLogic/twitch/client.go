@@ -126,7 +126,7 @@ func parseMessage(message string) (parsedMessage *util.TMessage) {
 		messageSplit := strings.Split(message, " ")
 		parsedMessage.Tags = strings.TrimSpace(messageSplit[0])
 		util.Config.Log.Debugln("Tags: ", parsedMessage.Tags)
-		parsedMessage.Username = strings.TrimRight(strings.TrimLeft(strings.TrimSpace(messageSplit[1]), ":"), "!")
+		parsedMessage.Username = strings.Split(strings.TrimLeft(strings.TrimSpace(messageSplit[1]), ":"), "!")[0]
 		util.Config.Log.Debugln("Username: ", parsedMessage.Username)
 		parsedMessage.Command = strings.TrimSpace(messageSplit[2])
 		util.Config.Log.Debugln("Command: ", parsedMessage.Command)

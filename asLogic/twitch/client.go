@@ -38,8 +38,12 @@ func Listen() {
 				switch parsedMessage.Command {
 				case "PRIVMSG":
 					room := queryHandler.QueryHandler().TwitchRooms[strings.TrimPrefix(parsedMessage.Channel, "#")]
+					asUser := queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username]
+
+					util.Config.Log.Debugf("asUser: %+v\n", asUser)
+
 					//Create AS User if needed and invite to room
-					if queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username] == nil {
+					if asUser == nil {
 						check, err := api.CheckTwitchUser(parsedMessage.Username)
 						if err != nil {
 							util.Config.Log.Errorln(err)
@@ -112,12 +116,12 @@ func Listen() {
 						util.Config.Log.Errorln(err)
 						return
 					}
-					mxid := queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username].Mxid
+					mxid := asUser.Mxid
 					if _, ok := joinedResp.Joined[mxid]; !ok {
-						queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username].MXClient.JoinRoom(room, "", nil)
+						asUser.MXClient.JoinRoom(room, "", nil)
 					}
 
-					queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username].MXClient.SendText(room, parsedMessage.Message)
+					asUser.MXClient.SendText(room, parsedMessage.Message)
 				case "PING":
 					util.Config.Log.Debugln("[TWITCH]: Respond to Ping")
 					util.BotUser.TwitchWS.WriteControl(websocket.PongMessage, []byte(""), time.Now().Add(10*time.Second))

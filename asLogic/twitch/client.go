@@ -55,7 +55,9 @@ func Listen() {
 							suff := strings.Split(v.Regex, ".+")[1]
 							asUser := &user.ASUser{}
 							asUser.Mxid = pre + parsedMessage.Username + suff
+							util.Config.Log.Debugln(asUser.Mxid)
 							MXusername := strings.Split(strings.TrimPrefix(asUser.Mxid, "@"), ":")[0]
+							util.Config.Log.Debugln(MXusername)
 							client, err := gomatrix.NewClient(util.Config.HomeserverURL, asUser.Mxid, util.Config.Registration.AppToken)
 							if err != nil {
 								util.Config.Log.Errorln(err)

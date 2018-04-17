@@ -122,12 +122,19 @@ func parseMessage(message string) (parsedMessage *util.TMessage) {
 
 	parsedMessage = &util.TMessage{}
 	if strings.HasPrefix(message, "@") {
+		util.Config.Log.Debugln("MessagePure: ", message)
 		messageSplit := strings.Split(message, " ")
+		util.Config.Log.Debugln("messageSplit: ", messageSplit)
 		parsedMessage.Tags = messageSplit[0]
+		util.Config.Log.Debugln("Tags: ", parsedMessage.Tags)
 		parsedMessage.Username = strings.TrimRight(strings.TrimLeft(messageSplit[1], ":"), "!")
+		util.Config.Log.Debugln("Username: ", parsedMessage.Username)
 		parsedMessage.Command = messageSplit[2]
+		util.Config.Log.Debugln("Command: ", parsedMessage.Command)
 		parsedMessage.Channel = messageSplit[3]
+		util.Config.Log.Debugln("Channel: ", parsedMessage.Channel)
 		parsedMessage.Message = strings.TrimLeft(messageSplit[4], ":")
+		util.Config.Log.Debugln("Message: ", parsedMessage.Message)
 	} else if strings.HasPrefix(message, "PING") {
 		parsedMessage.Command = "PING"
 		parsedMessage.Message = strings.Split(message, ":")[1]

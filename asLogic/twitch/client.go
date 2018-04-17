@@ -96,6 +96,7 @@ func Listen() {
 					}
 
 					// Check if user needs to join the room
+					util.Config.Log.Debugln("room: ", room)
 					joinedResp, err := util.BotUser.MXClient.JoinedMembers(room)
 					if err != nil {
 						util.Config.Log.Errorln(err)

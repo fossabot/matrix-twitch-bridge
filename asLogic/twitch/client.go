@@ -105,6 +105,7 @@ func Listen() {
 
 					queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username].MXClient.SendText(room, parsedMessage.Message)
 				case "PING":
+					util.Config.Log.Debugln("[TWITCH]: Respond to Ping")
 					util.BotUser.TwitchWS.WriteControl(websocket.PongMessage, []byte(""), time.Now().Add(10*time.Second))
 				default:
 					util.Config.Log.Debugf("[TWITCH]: %+v\n", parsedMessage)

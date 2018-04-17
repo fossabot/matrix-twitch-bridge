@@ -26,6 +26,8 @@ func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
 		for {
 			select {
 			case <-util.Done:
+				util.Config.Log.Errorln("Done got closed")
+				os.Exit(1)
 				return
 			case <-interrupt:
 				// Cleanly close the connection by sending a close message and then

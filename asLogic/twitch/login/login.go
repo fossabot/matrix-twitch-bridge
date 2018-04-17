@@ -121,6 +121,8 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 
+		util.Config.Log.Debugf("p: %+v\n", p)
+
 		queryHandler.QueryHandler().RealUsers[state].TwitchName = p.Name
 		util.Config.Log.Debugln(p.Name)
 

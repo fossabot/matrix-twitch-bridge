@@ -31,6 +31,8 @@ func Listen() {
 				util.Config.Log.Errorln(err)
 				return
 			}
+
+			util.Config.Log.Debugf("recv: %s\n", message)
 			parsedMessage := parseMessage(fmt.Sprintf("%s", message))
 			if parsedMessage != nil {
 				switch parsedMessage.Command {
@@ -108,8 +110,6 @@ func Listen() {
 					util.Config.Log.Debugf("[TWITCH]: %+v\n", parsedMessage)
 				}
 			}
-
-			util.Config.Log.Debugf("recv: %s\n", message)
 		}
 	}()
 }

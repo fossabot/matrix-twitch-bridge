@@ -18,7 +18,7 @@ func CreateUser(client *gomatrix.Client, username string) error {
 	}
 
 	register, inter, err := client.Register(&registerReq)
-	if err != nil && err.(*gomatrix.HTTPError).WrappedError.(gomatrix.RespError).Err != "M_USER_IN_USE" {
+	if err != nil && err.(gomatrix.HTTPError).WrappedError.(gomatrix.RespError).Err != "M_USER_IN_USE" {
 		return err
 	}
 	if inter != nil || register == nil && err.(*gomatrix.HTTPError).WrappedError.(gomatrix.RespError).Err != "M_USER_IN_USE" {

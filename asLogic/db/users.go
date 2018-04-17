@@ -137,6 +137,7 @@ func getUsers() (users *userTransportStruct, err error) {
 			}
 			var ws *websocket.Conn
 			if TwitchToken != nil {
+				util.Config.Log.Debugln("tName used for ws nick: ", twitchName)
 				ws, err = connect.Connect(TwitchToken.AccessToken, twitchName)
 				if err != nil {
 					return nil, err

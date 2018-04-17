@@ -162,7 +162,7 @@ func Run() error {
 							if event.SenderID != util.BotUser.MXClient.UserID {
 								err = useEvent(event)
 								if err != nil {
-									log.Panicln("[err]: ", err)
+									panic(err)
 								}
 							}
 						}

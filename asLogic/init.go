@@ -229,6 +229,8 @@ func useEvent(event appservice.Event) error {
 			if err != nil {
 				return err
 			}
+		} else {
+			return nil
 		}
 	}
 

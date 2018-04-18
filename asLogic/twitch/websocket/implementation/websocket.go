@@ -4,7 +4,6 @@ package implementation
 import (
 	"fmt"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/api"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
@@ -81,10 +80,10 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 				}
 				*w = WebsocketHolder{
 					Done:        make(chan struct{}),
-					TwitchRooms: queryHandler.QueryHandler().TwitchRooms,
-					TwitchUsers: queryHandler.QueryHandler().TwitchUsers,
-					RealUsers:   queryHandler.QueryHandler().RealUsers,
-					Users:       queryHandler.QueryHandler().Users,
+					TwitchRooms: w.TwitchRooms,
+					TwitchUsers: w.TwitchUsers,
+					RealUsers:   w.RealUsers,
+					Users:       w.Users,
 				}
 				err = w.Connect(oauthToken, username)
 				return

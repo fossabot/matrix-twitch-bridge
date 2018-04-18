@@ -61,14 +61,14 @@ func (d *DB) GetRooms() (rooms map[string]*room.Room, err error) {
 			return nil, err
 		}
 
-		TwitchWS := &implementation.WebsocketHolder{
+		ws := &implementation.WebsocketHolder{
 			Done:        make(chan struct{}),
 			TwitchRooms: queryHandler.QueryHandler().TwitchRooms,
 			TwitchUsers: queryHandler.QueryHandler().TwitchUsers,
 			RealUsers:   queryHandler.QueryHandler().RealUsers,
 			Users:       queryHandler.QueryHandler().Users,
 		}
-		err = TwitchWS.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
+		err = ws.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
 		if err != nil {
 			return nil, err
 		}
@@ -77,7 +77,7 @@ func (d *DB) GetRooms() (rooms map[string]*room.Room, err error) {
 			Alias:         RoomAlias,
 			ID:            RoomID,
 			TwitchChannel: TwitchChannel,
-			TwitchWS:      TwitchWS,
+			TwitchWS:      ws,
 		}
 
 		rooms[RoomAlias] = room

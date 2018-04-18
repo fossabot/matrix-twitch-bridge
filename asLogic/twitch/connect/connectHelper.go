@@ -29,7 +29,9 @@ func Connect(WS *websocket.Conn, oauthToken, username string) (err error) {
 		},
 		HandshakeTimeout: 45 * time.Second,
 	}
+	util.Config.Log.Debugf("WS before: %+v\n", WS)
 	WS, _, err = dialer.Dial("wss://irc-ws.chat.twitch.tv:443/irc", nil)
+	util.Config.Log.Debugf("WS after: %+v\n", WS)
 
 	go func() {
 		for {

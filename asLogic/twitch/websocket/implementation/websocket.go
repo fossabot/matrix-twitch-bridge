@@ -4,7 +4,6 @@ package implementation
 import (
 	"fmt"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/api"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
@@ -22,6 +21,11 @@ type WebsocketHolder struct {
 	WS *websocket.Conn
 	// Done is used to gracefully exit all WS connections
 	Done chan struct{}
+
+	Users       map[string]*user.ASUser
+	RealUsers   map[string]*user.RealUser
+	TwitchUsers map[string]*user.ASUser
+	TwitchRooms map[string]string
 }
 
 func (w *WebsocketHolder) Send(channel, messageRaw string) error {
@@ -71,6 +75,7 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 				util.Config.Log.Errorln("Done got closed")
 				util.Config.Log.Errorln("Reconnecting WS")
 				err = w.WS.Close()
+				w.WS = nil
 				w.Done = make(chan struct{})
 				err = w.Connect(oauthToken, username)
 				return
@@ -127,7 +132,7 @@ func (w *WebsocketHolder) Listen() {
 	go func() {
 		defer close(w.Done)
 		for {
-			_, message, err := util.BotUser.TwitchWS.GetWS().ReadMessage()
+			_, message, err := w.WS.ReadMessage()
 			if err != nil {
 				util.Config.Log.Errorln(err)
 				return
@@ -139,7 +144,7 @@ func (w *WebsocketHolder) Listen() {
 				switch parsedMessage.Command {
 				case "PRIVMSG":
 					real := false
-					for _, v := range queryHandler.QueryHandler().RealUsers {
+					for _, v := range w.RealUsers {
 						if parsedMessage.Username == v.TwitchName {
 							real = true
 							break
@@ -148,8 +153,8 @@ func (w *WebsocketHolder) Listen() {
 					if real {
 						continue
 					}
-					room := queryHandler.QueryHandler().TwitchRooms[strings.TrimPrefix(parsedMessage.Channel, "#")]
-					asUser := queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username]
+					room := w.TwitchRooms[strings.TrimPrefix(parsedMessage.Channel, "#")]
+					asUser := w.TwitchUsers[parsedMessage.Username]
 
 					//Create AS User if needed and invite to room
 					if asUser == nil {
@@ -196,7 +201,7 @@ func (w *WebsocketHolder) Listen() {
 								util.Config.Log.Errorln("user missing")
 								return
 							}
-							err = client.SetDisplayName(userdata.Users[0].DisplayName)
+							err = client.SetDisplayName(userdata.Users[0].DisplayName + " (Twitch)")
 							if err != nil {
 								util.Config.Log.Errorln(err)
 							}
@@ -209,9 +214,9 @@ func (w *WebsocketHolder) Listen() {
 								util.Config.Log.Errorln(err)
 							}
 
-							queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username] = asUser
-							queryHandler.QueryHandler().Users[asUser.Mxid] = asUser
-							err = util.DB.SaveUser(queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username])
+							w.TwitchUsers[parsedMessage.Username] = asUser
+							w.Users[asUser.Mxid] = asUser
+							err = util.DB.SaveUser(w.TwitchUsers[parsedMessage.Username])
 							if err != nil {
 								util.Config.Log.Errorln(err)
 							}
@@ -234,7 +239,7 @@ func (w *WebsocketHolder) Listen() {
 				case "PING":
 					util.Config.Log.Debugln("[TWITCH]: Respond to Ping")
 					util.BotUser.Mux.Lock()
-					util.BotUser.TwitchWS.GetWS().WriteControl(websocket.PongMessage, []byte("\r\n"), time.Now().Add(10*time.Second))
+					w.WS.WriteControl(websocket.PongMessage, []byte("\r\n"), time.Now().Add(10*time.Second))
 					util.BotUser.Mux.Unlock()
 				default:
 					util.Config.Log.Debugf("[TWITCH]: %+v\n", parsedMessage)

@@ -34,7 +34,6 @@ type BotUser struct {
 	Mxid        string
 	TwitchName  string
 	TwitchToken string
-	TwitchWS    websocket.WebsocketHolder
 	Mux         sync.Mutex
 	MXClient    *gomatrix.Client
 }

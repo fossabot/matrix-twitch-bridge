@@ -57,6 +57,7 @@ func (d *DB) GetRooms() (rooms map[string]*room.Room, err error) {
 		if err != nil {
 			return nil, err
 		}
+
 		room := &room.Room{
 			Alias:         RoomAlias,
 			ID:            RoomID,

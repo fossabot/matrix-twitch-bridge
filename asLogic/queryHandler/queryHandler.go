@@ -4,6 +4,7 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/api"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/websocket/implementation"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/matrix-org/gomatrix"
@@ -88,7 +89,14 @@ func (q queryHandler) QueryAlias(alias string) bool {
 	}
 
 	util.BotUser.Mux.Lock()
-	err = util.BotUser.TwitchWS.Join(tUsername)
+	q.Aliases[alias].TwitchWS = &implementation.WebsocketHolder{
+		Done:        make(chan struct{}),
+		TwitchRooms: q.TwitchRooms,
+		TwitchUsers: q.TwitchUsers,
+		RealUsers:   q.RealUsers,
+		Users:       q.Users,
+	}
+	err = q.Aliases[alias].TwitchWS.Join(tUsername)
 	util.BotUser.Mux.Unlock()
 	if err != nil {
 		util.Config.Log.Errorln(err)
@@ -149,14 +157,21 @@ func (q queryHandler) QueryUser(userID string) bool {
 		util.Config.Log.Errorln("user missing")
 		return false
 	}
-	client.SetDisplayName(userdata.Users[0].DisplayName)
+	err = client.SetDisplayName(userdata.Users[0].DisplayName + " (Twitch)")
+	if err != nil {
+		util.Config.Log.Errorln(err)
+	}
 	resp, err := client.UploadLink(userdata.Users[0].Logo)
-	client.SetAvatarURL(resp.ContentURI)
+	err = client.SetAvatarURL(resp.ContentURI)
+	if err != nil {
+		util.Config.Log.Errorln(err)
+	}
 
 	q.Users[userID] = &asUser
 	err = util.DB.SaveUser(q.Users[userID])
 	if err != nil {
 		util.Config.Log.Errorln(err)
+		return false
 	}
 	return true
 }

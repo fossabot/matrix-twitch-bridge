@@ -169,19 +169,10 @@ func (d *DB) getUsers() (users *userTransportStruct, err error) {
 				TwitchToken = twitchToken.String
 			}
 
-			wsHolder := &wsImpl.WebsocketHolder{
-				Done: make(chan struct{}),
-			}
-			err := wsHolder.Connect(TwitchToken, twitchName)
-			if err != nil {
-				return nil, err
-			}
-
 			BotUser := &user.BotUser{
 				Mxid:        mxid,
 				TwitchToken: TwitchToken,
 				TwitchName:  twitchName,
-				TwitchWS:    wsHolder,
 			}
 			transportStruct.BotUsers = append(transportStruct.BotUsers, BotUser)
 		}

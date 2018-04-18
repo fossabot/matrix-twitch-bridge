@@ -52,9 +52,7 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	if w.Done == nil {
-		w.Done = make(chan struct{})
-	}
+	w.Done = make(chan struct{})
 
 	dialer := &websocket.Dialer{
 		NetDial: func(network, addr string) (net.Conn, error) {
@@ -74,7 +72,6 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 				util.Config.Log.Errorln("Done got closed")
 				util.Config.Log.Errorln("Reconnecting WS")
 				err = w.WS.Close()
-				w.Done = make(chan struct{})
 				err = w.Connect(oauthToken, username)
 				return
 			case <-interrupt:

@@ -68,7 +68,7 @@ func (q queryHandler) QueryAlias(alias string) bool {
 		break
 	}
 
-	resp, err := matrix_helper.CreateRoom(client, displayname, logoURL, roomalias, "public_chat")
+	resp, err := matrix_helper.CreateRoom(client, displayname, logoURL, roomalias, "public_chat", false)
 	if err != nil {
 		util.Config.Log.Errorln(err)
 		return false

@@ -2,7 +2,7 @@ package matrix_helper
 
 import "github.com/matrix-org/gomatrix"
 
-func CreateRoom(client *gomatrix.Client, displayname, avatarURL, alias, preset string) (*gomatrix.RespCreateRoom, error) {
+func CreateRoom(client *gomatrix.Client, displayname, avatarURL, alias, preset string, direct bool) (*gomatrix.RespCreateRoom, error) {
 	createRoomReq := &gomatrix.ReqCreateRoom{}
 	createRoomReq.Name = displayname
 
@@ -17,6 +17,7 @@ func CreateRoom(client *gomatrix.Client, displayname, avatarURL, alias, preset s
 			Type:    "m.room.avatar",
 			Content: content,
 		}
+		createRoomReq.IsDirect = direct
 		createRoomReq.InitialState = append(createRoomReq.InitialState, m_room_avatar_event)
 	}
 

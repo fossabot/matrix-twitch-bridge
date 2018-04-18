@@ -139,7 +139,8 @@ func getUsers() (users *userTransportStruct, err error) {
 					TwitchToken.Expiry = expiryTime
 				}
 			}
-			ws := &websocket.Conn{}
+
+			var ws *websocket.Conn
 			if TwitchToken != nil {
 				util.Config.Log.Debugln("tName used for ws nick: ", twitchName)
 				err = connect.Connect(ws, TwitchToken.AccessToken, twitchName)
@@ -162,7 +163,7 @@ func getUsers() (users *userTransportStruct, err error) {
 				TwitchToken = twitchToken.String
 			}
 
-			ws := &websocket.Conn{}
+			var ws *websocket.Conn
 			err := connect.Connect(ws, TwitchToken, twitchName)
 			if err != nil {
 				return nil, err

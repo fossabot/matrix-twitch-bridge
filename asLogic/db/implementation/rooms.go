@@ -3,10 +3,7 @@ package implementation
 import (
 	"database/sql"
 	dbHelper "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db/helper"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/websocket/implementation"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 )
 
 type DB struct {
@@ -61,23 +58,10 @@ func (d *DB) GetRooms() (rooms map[string]*room.Room, err error) {
 			return nil, err
 		}
 
-		ws := &implementation.WebsocketHolder{
-			Done:        make(chan struct{}),
-			TwitchRooms: queryHandler.QueryHandler().TwitchRooms,
-			TwitchUsers: queryHandler.QueryHandler().TwitchUsers,
-			RealUsers:   queryHandler.QueryHandler().RealUsers,
-			Users:       queryHandler.QueryHandler().Users,
-		}
-		err = ws.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
-		if err != nil {
-			return nil, err
-		}
-
 		room := &room.Room{
 			Alias:         RoomAlias,
 			ID:            RoomID,
 			TwitchChannel: TwitchChannel,
-			TwitchWS:      ws,
 		}
 
 		rooms[RoomAlias] = room

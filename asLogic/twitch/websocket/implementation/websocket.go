@@ -20,7 +20,8 @@ type WebsocketHolder struct {
 	// Websocket
 	WS *websocket.Conn
 	// Done is used to gracefully exit all WS connections
-	Done chan struct{}
+	Done  chan struct{}
+	TRoom string
 
 	Users       map[string]*user.ASUser
 	RealUsers   map[string]*user.RealUser
@@ -78,14 +79,23 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 				if err != nil {
 					return
 				}
+				oldRoom := w.TRoom
 				*w = WebsocketHolder{
 					Done:        make(chan struct{}),
 					TwitchRooms: w.TwitchRooms,
 					TwitchUsers: w.TwitchUsers,
 					RealUsers:   w.RealUsers,
 					Users:       w.Users,
+					TRoom:       w.TRoom,
+				}
+				if oldRoom != "" {
+					w.TRoom = oldRoom
 				}
 				err = w.Connect(oauthToken, username)
+				if err != nil {
+					return
+				}
+				err = w.Join(w.TRoom)
 				return
 			case <-interrupt:
 				// Cleanly close the connection by sending a close message and then

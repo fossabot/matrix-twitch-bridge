@@ -95,6 +95,7 @@ func (q queryHandler) QueryAlias(alias string) bool {
 		TwitchUsers: q.TwitchUsers,
 		RealUsers:   q.RealUsers,
 		Users:       q.Users,
+		TRoom:       tUsername,
 	}
 	err = q.Aliases[alias].TwitchWS.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
 	err = q.Aliases[alias].TwitchWS.Join(tUsername)

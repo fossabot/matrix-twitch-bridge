@@ -71,6 +71,7 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 				util.Config.Log.Errorln("Done got closed")
 				util.Config.Log.Errorln("Reconnecting WS")
 				err = w.WS.Close()
+				w.Done = make(chan struct{})
 				err = w.Connect(oauthToken, username)
 				return
 			case <-interrupt:

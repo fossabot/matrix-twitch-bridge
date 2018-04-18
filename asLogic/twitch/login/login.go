@@ -133,7 +133,7 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 
 		db.SaveUser(queryHandler.QueryHandler().RealUsers[state])
 
-		queryHandler.QueryHandler().RealUsers[state].TwitchWS, err = connect.Connect(tok.AccessToken, p.Name)
+		err = connect.Connect(queryHandler.QueryHandler().RealUsers[state].TwitchWS, tok.AccessToken, p.Name)
 		if err != nil {
 			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)

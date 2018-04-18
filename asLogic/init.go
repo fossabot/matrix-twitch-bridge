@@ -116,7 +116,7 @@ func Run() error {
 	}
 
 	util.Config.Log.Debugln("Start Connecting BotUser to Twitch as: ", util.BotUser.TwitchName)
-	util.BotUser.TwitchWS, err = connect.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
+	err = connect.Connect(util.BotUser.TwitchWS, util.BotUser.TwitchToken, util.BotUser.TwitchName)
 	if err != nil {
 		return err
 	}
@@ -224,7 +224,7 @@ func useEvent(event appservice.Event) error {
 			var err error
 
 			util.Config.Log.Debugln("Connect new WS to Twitch")
-			mxUser.TwitchWS, err = connect.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
+			err = connect.Connect(mxUser.TwitchWS, mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
 			if err != nil {
 				return err
 			}

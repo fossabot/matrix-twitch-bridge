@@ -11,7 +11,7 @@ import (
 )
 
 // Connect opens a Websocket and requests the needed Capabilities and does the Login
-func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
+func Connect(WS *websocket.Conn, oauthToken, username string) (err error) {
 	// Make sure to catch the Interrupt Signal to close the WS gracefully
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
@@ -37,9 +37,9 @@ func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
 			case <-util.Done:
 				util.Config.Log.Errorln("Done got closed")
 				util.Config.Log.Errorln("Reconnecting WS")
-				WS.Close()
+				err = WS.Close()
 				util.Done = make(chan struct{})
-				Connect(oauthToken, username)
+				err = Connect(WS, oauthToken, username)
 				return
 			case <-interrupt:
 				// Cleanly close the connection by sending a close message and then
@@ -78,9 +78,12 @@ func Connect(oauthToken, username string) (WS *websocket.Conn, err error) {
 	}
 
 	WS.SetCloseHandler(func(code int, text string) error {
-		WS.Close()
-		Connect(oauthToken, username)
-		return nil
+		err := WS.Close()
+		if err != nil {
+			return err
+		}
+		err = Connect(WS, oauthToken, username)
+		return err
 	})
 
 	return

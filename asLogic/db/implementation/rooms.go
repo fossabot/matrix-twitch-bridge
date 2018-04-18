@@ -3,6 +3,7 @@ package implementation
 import (
 	"database/sql"
 	dbHelper "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db/helper"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/websocket/implementation"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
@@ -61,7 +62,11 @@ func (d *DB) GetRooms() (rooms map[string]*room.Room, err error) {
 		}
 
 		TwitchWS := &implementation.WebsocketHolder{
-			Done: make(chan struct{}),
+			Done:        make(chan struct{}),
+			TwitchRooms: queryHandler.QueryHandler().TwitchRooms,
+			TwitchUsers: queryHandler.QueryHandler().TwitchUsers,
+			RealUsers:   queryHandler.QueryHandler().RealUsers,
+			Users:       queryHandler.QueryHandler().Users,
 		}
 		err = TwitchWS.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
 		if err != nil {

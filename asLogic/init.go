@@ -247,6 +247,7 @@ func useEvent(event appservice.Event) error {
 					if err != nil {
 						return err
 					}
+					v.TwitchWS.Listen()
 				} else {
 					return nil
 				}

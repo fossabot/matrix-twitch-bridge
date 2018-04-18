@@ -197,7 +197,7 @@ func (w *WebsocketHolder) Listen() {
 								util.Config.Log.Errorln("user missing")
 								return
 							}
-							err = client.SetDisplayName(userdata.Users[0].DisplayName)
+							err = client.SetDisplayName(userdata.Users[0].DisplayName + " (Twitch)")
 							if err != nil {
 								util.Config.Log.Errorln(err)
 							}

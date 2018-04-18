@@ -149,14 +149,21 @@ func (q queryHandler) QueryUser(userID string) bool {
 		util.Config.Log.Errorln("user missing")
 		return false
 	}
-	client.SetDisplayName(userdata.Users[0].DisplayName)
+	err = client.SetDisplayName(userdata.Users[0].DisplayName + " (Twitch)")
+	if err != nil {
+		util.Config.Log.Errorln(err)
+	}
 	resp, err := client.UploadLink(userdata.Users[0].Logo)
-	client.SetAvatarURL(resp.ContentURI)
+	err = client.SetAvatarURL(resp.ContentURI)
+	if err != nil {
+		util.Config.Log.Errorln(err)
+	}
 
 	q.Users[userID] = &asUser
 	err = util.DB.SaveUser(q.Users[userID])
 	if err != nil {
 		util.Config.Log.Errorln(err)
+		return false
 	}
 	return true
 }

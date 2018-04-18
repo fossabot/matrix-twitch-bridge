@@ -2,12 +2,10 @@ package asLogic
 
 import (
 	"fmt"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
+	dbImpl "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db/implementation"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/connect"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/join"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/login"
+	wsImpl "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/websocket/implementation"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/fatih/color"
@@ -41,41 +39,43 @@ func prepareRun() error {
 	util.Config.LogConfig.Configure(util.Config.Log)
 	util.Config.Log.Debugln("Logger initialized successfully.")
 
+	util.DB = &dbImpl.DB{}
+
 	util.Config.Log.Debugln("Creating queryHandler.")
 	qHandler := queryHandler.QueryHandler()
 
 	util.Config.Log.Debugln("Loading Twitch Rooms from DB.")
-	qHandler.TwitchRooms, err = db.GetTwitchRooms()
+	qHandler.TwitchRooms, err = util.DB.GetTwitchRooms()
 	if err != nil {
 		return err
 	}
 
 	util.Config.Log.Debugln("Loading Rooms from DB.")
-	qHandler.Aliases, err = db.GetRooms()
+	qHandler.Aliases, err = util.DB.GetRooms()
 	if err != nil {
 		return err
 	}
 
 	util.Config.Log.Debugln("Loading Twitch Users from DB.")
-	qHandler.TwitchUsers, err = db.GetTwitchUsers()
+	qHandler.TwitchUsers, err = util.DB.GetTwitchUsers()
 	if err != nil {
 		return err
 	}
 
 	util.Config.Log.Debugln("Loading AS Users from DB.")
-	qHandler.Users, err = db.GetASUsers()
+	qHandler.Users, err = util.DB.GetASUsers()
 	if err != nil {
 		return err
 	}
 
 	util.Config.Log.Debugln("Loading Real Users from DB.")
-	qHandler.RealUsers, err = db.GetRealUsers()
+	qHandler.RealUsers, err = util.DB.GetRealUsers()
 	if err != nil {
 		return err
 	}
 
 	util.Config.Log.Debugln("Loading Bot User from DB.")
-	util.BotUser, err = db.GetBotUser()
+	util.BotUser, err = util.DB.GetBotUser()
 	if err != nil {
 		return err
 	}
@@ -116,17 +116,18 @@ func Run() error {
 	}
 
 	util.Config.Log.Debugln("Start Connecting BotUser to Twitch as: ", util.BotUser.TwitchName)
-	err = connect.Connect(util.BotUser.TwitchWS, util.BotUser.TwitchToken, util.BotUser.TwitchName)
+	util.BotUser.TwitchWS = &wsImpl.WebsocketHolder{}
+	err = util.BotUser.TwitchWS.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
 	if err != nil {
 		return err
 	}
 
 	util.Config.Log.Debugln("Start letting BotUser listen to Twitch")
-	twitch.Listen()
+	util.BotUser.TwitchWS.Listen()
 
 	for v := range queryHandler.QueryHandler().TwitchRooms {
 		util.BotUser.Mux.Lock()
-		err = join.Join(util.BotUser.TwitchWS, v)
+		err = util.BotUser.TwitchWS.Join(v)
 		util.BotUser.Mux.Unlock()
 		if err != nil {
 			return err
@@ -224,7 +225,8 @@ func useEvent(event appservice.Event) error {
 			var err error
 
 			util.Config.Log.Debugln("Connect new WS to Twitch")
-			err = connect.Connect(mxUser.TwitchWS, mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
+			util.BotUser.TwitchWS = &wsImpl.WebsocketHolder{}
+			err = util.BotUser.TwitchWS.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
 			if err != nil {
 				return err
 			}
@@ -242,13 +244,7 @@ func useEvent(event appservice.Event) error {
 				util.Config.Log.Debugln("Send message to twitch")
 
 				util.BotUser.Mux.Lock()
-				err := twitch.Send(mxUser.TwitchWS, v.TwitchChannel, event.Content["body"].(string))
-				_, message, err := mxUser.TwitchWS.ReadMessage()
-				if err != nil {
-					return err
-				}
-
-				util.Config.Log.Debugf("recv after Send: %s\n", message)
+				err := util.BotUser.TwitchWS.Send(v.TwitchChannel, event.Content["body"].(string))
 				util.BotUser.Mux.Unlock()
 				if err != nil {
 					return err

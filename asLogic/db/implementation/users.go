@@ -1,12 +1,12 @@
-package db
+package implementation
 
 import (
 	"database/sql"
+	dbHelper "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db/helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/connect"
+	wsImpl "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/websocket/implementation"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
-	"github.com/gorilla/websocket"
 	"github.com/matrix-org/gomatrix"
 	"golang.org/x/oauth2"
 	"strings"
@@ -14,12 +14,14 @@ import (
 )
 
 // SaveUser saves a User struct to the Database
-func SaveUser(userA interface{}) error {
+func (d *DB) SaveUser(userA interface{}) error {
 	util.Config.Log.Debugln("Opening DB")
-	db := Open()
+	if d.db == nil {
+		d.db = dbHelper.Open()
+	}
 
 	util.Config.Log.Debugln("Beginning DB transaction")
-	tx, err := db.Begin()
+	tx, err := d.db.Begin()
 	if err != nil {
 		return err
 	}
@@ -84,10 +86,12 @@ type userTransportStruct struct {
 	BotUsers  []*user.BotUser
 }
 
-func getUsers() (users *userTransportStruct, err error) {
+func (d *DB) getUsers() (users *userTransportStruct, err error) {
 	transportStruct := &userTransportStruct{}
-	db := Open()
-	rows, err := db.Query("SELECT type, mxid, twitch_name, twitch_token, twitch_token_id FROM users")
+	if d.db == nil {
+		d.db = dbHelper.Open()
+	}
+	rows, err := d.db.Query("SELECT type, mxid, twitch_name, twitch_token, twitch_token_id FROM users")
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +124,7 @@ func getUsers() (users *userTransportStruct, err error) {
 				var refreshToken string
 				var expiry sql.NullString
 				expiryTime := time.Time{}
-				db.QueryRow("SELECT access_token, token_type, refresh_token, expiry FROM tokens WHERE id = "+twitchTokenID.String, &accessToken, &tokenType, &refreshToken, &expiry)
+				d.db.QueryRow("SELECT access_token, token_type, refresh_token, expiry FROM tokens WHERE id = "+twitchTokenID.String, &accessToken, &tokenType, &refreshToken, &expiry)
 
 				if expiry.Valid {
 					err = expiryTime.UnmarshalText([]byte(expiry.String))
@@ -140,10 +144,10 @@ func getUsers() (users *userTransportStruct, err error) {
 				}
 			}
 
-			var ws *websocket.Conn
+			var wsHolder *wsImpl.WebsocketHolder
 			if TwitchToken != nil {
 				util.Config.Log.Debugln("tName used for ws nick: ", twitchName)
-				err = connect.Connect(ws, TwitchToken.AccessToken, twitchName)
+				err = wsHolder.Connect(TwitchToken.AccessToken, twitchName)
 				if err != nil {
 					return nil, err
 				}
@@ -153,7 +157,7 @@ func getUsers() (users *userTransportStruct, err error) {
 				Mxid:              mxid,
 				TwitchTokenStruct: TwitchToken,
 				TwitchName:        twitchName,
-				TwitchWS:          ws,
+				TwitchWS:          wsHolder,
 			}
 
 			transportStruct.RealUsers = append(transportStruct.RealUsers, RealUser)
@@ -163,8 +167,8 @@ func getUsers() (users *userTransportStruct, err error) {
 				TwitchToken = twitchToken.String
 			}
 
-			var ws *websocket.Conn
-			err := connect.Connect(ws, TwitchToken, twitchName)
+			var wsHolder *wsImpl.WebsocketHolder
+			err := wsHolder.Connect(TwitchToken, twitchName)
 			if err != nil {
 				return nil, err
 			}
@@ -173,7 +177,7 @@ func getUsers() (users *userTransportStruct, err error) {
 				Mxid:        mxid,
 				TwitchToken: TwitchToken,
 				TwitchName:  twitchName,
-				TwitchWS:    ws,
+				TwitchWS:    wsHolder,
 			}
 			transportStruct.BotUsers = append(transportStruct.BotUsers, BotUser)
 		}
@@ -185,9 +189,9 @@ func getUsers() (users *userTransportStruct, err error) {
 }
 
 // GetASUsers returns all Users of type AS mapped by the MXID
-func GetASUsers() (map[string]*user.ASUser, error) {
+func (d *DB) GetASUsers() (map[string]*user.ASUser, error) {
 	ASMap := make(map[string]*user.ASUser)
-	dbResp, err := getUsers()
+	dbResp, err := d.getUsers()
 	if err != nil {
 		return nil, err
 	}
@@ -208,10 +212,10 @@ func GetASUsers() (map[string]*user.ASUser, error) {
 }
 
 // GetTwitchUsers returns all Users of type AS mapped by the Twitch Channel Name
-func GetTwitchUsers() (map[string]*user.ASUser, error) {
+func (d *DB) GetTwitchUsers() (map[string]*user.ASUser, error) {
 	TwitchMap := make(map[string]*user.ASUser)
 
-	dbResp, err := getUsers()
+	dbResp, err := d.getUsers()
 	if err != nil {
 		return nil, err
 	}
@@ -232,10 +236,10 @@ func GetTwitchUsers() (map[string]*user.ASUser, error) {
 }
 
 // GetRealUsers returns all Users of type REAL mapped by the MXID
-func GetRealUsers() (map[string]*user.RealUser, error) {
+func (d *DB) GetRealUsers() (map[string]*user.RealUser, error) {
 	RealMap := make(map[string]*user.RealUser)
 
-	dbResp, err := getUsers()
+	dbResp, err := d.getUsers()
 	if err != nil {
 		return nil, err
 	}
@@ -247,8 +251,8 @@ func GetRealUsers() (map[string]*user.RealUser, error) {
 }
 
 // GetBotUser returns all Users of type BOT
-func GetBotUser() (*user.BotUser, error) {
-	dbResp, err := getUsers()
+func (d *DB) GetBotUser() (*user.BotUser, error) {
+	dbResp, err := d.getUsers()
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +294,7 @@ func GetBotUser() (*user.BotUser, error) {
 	botUser.MXClient = client
 
 	util.Config.Log.Debugf("Saving Bot User to DB: %+v\n", botUser)
-	SaveUser(botUser)
+	d.SaveUser(botUser)
 
 	return botUser, nil
 }

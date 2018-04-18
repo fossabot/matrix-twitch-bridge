@@ -19,7 +19,7 @@ import (
 	"os"
 
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
+	dbHelper "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db/helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/spf13/cobra"
 	"log"
@@ -32,7 +32,7 @@ var rootCmd = &cobra.Command{
 	Short: "",
 	Long:  ``,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		db.Init()
+		dbHelper.Init()
 		log.Println("DB Set Up")
 	},
 	Run: func(cmd *cobra.Command, args []string) {

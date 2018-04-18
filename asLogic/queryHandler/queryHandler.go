@@ -1,11 +1,9 @@
 package queryHandler
 
 import (
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/api"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/join"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/matrix-org/gomatrix"
@@ -84,13 +82,13 @@ func (q queryHandler) QueryAlias(alias string) bool {
 	}
 	q.Aliases[alias] = troom
 	q.TwitchRooms[troom.TwitchChannel] = troom.ID
-	err = db.SaveRoom(troom)
+	err = util.DB.SaveRoom(troom)
 	if err != nil {
 		util.Config.Log.Errorln(err)
 	}
 
 	util.BotUser.Mux.Lock()
-	err = join.Join(util.BotUser.TwitchWS, tUsername)
+	err = util.BotUser.TwitchWS.Join(tUsername)
 	util.BotUser.Mux.Unlock()
 	if err != nil {
 		util.Config.Log.Errorln(err)
@@ -156,7 +154,7 @@ func (q queryHandler) QueryUser(userID string) bool {
 	client.SetAvatarURL(resp.ContentURI)
 
 	q.Users[userID] = &asUser
-	err = db.SaveUser(q.Users[userID])
+	err = util.DB.SaveUser(q.Users[userID])
 	if err != nil {
 		util.Config.Log.Errorln(err)
 	}

@@ -1,4 +1,4 @@
-package db
+package helper
 
 import (
 	"database/sql"

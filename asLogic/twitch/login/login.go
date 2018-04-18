@@ -3,10 +3,8 @@ package login
 import (
 	"context"
 	"encoding/json"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/connect"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/matrix-org/gomatrix"
@@ -131,9 +129,9 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		queryHandler.QueryHandler().RealUsers[state].TwitchName = p.Name
 		util.Config.Log.Debugln(p.Name)
 
-		db.SaveUser(queryHandler.QueryHandler().RealUsers[state])
+		util.DB.SaveUser(queryHandler.QueryHandler().RealUsers[state])
 
-		err = connect.Connect(queryHandler.QueryHandler().RealUsers[state].TwitchWS, tok.AccessToken, p.Name)
+		err = queryHandler.QueryHandler().RealUsers[state].TwitchWS.Connect(tok.AccessToken, p.Name)
 		if err != nil {
 			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)

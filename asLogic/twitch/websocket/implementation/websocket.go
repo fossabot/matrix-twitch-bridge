@@ -1,8 +1,8 @@
-package twitch
+//Used to prevent import cycle
+package implementation
 
 import (
 	"fmt"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/api"
@@ -10,28 +10,127 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/gorilla/websocket"
 	"github.com/matrix-org/gomatrix"
+	"net"
+	"os"
+	"os/signal"
 	"strings"
 	"time"
 )
 
-func Send(WS *websocket.Conn, channel, messageRaw string) error {
+type WebsocketHolder struct {
+	// Websocket
+	WS *websocket.Conn
+	// Done is used to gracefully exit all WS connections
+	Done chan struct{}
+}
+
+func (w *WebsocketHolder) Send(channel, messageRaw string) error {
 	// Send Message
 	message := "PRIVMSG #" + channel + " :" + messageRaw + "\r\n"
 	deadline := time.Now().Add(time.Second * 5)
-	err := WS.SetWriteDeadline(deadline)
+	err := w.WS.SetWriteDeadline(deadline)
 	if err != nil {
 		return err
 	}
-	err = WS.WriteMessage(websocket.TextMessage, []byte(message))
+	err = w.WS.WriteMessage(websocket.TextMessage, []byte(message))
 	return err
 }
 
-// Listen answers to the PING messages by Twitch and relays messages to Matrix
-func Listen() {
+func (w *WebsocketHolder) Join(channel string) error {
+	// Join Room
+	join := "JOIN #" + channel + "\r\n"
+	util.Config.Log.Debugln("Join Command: ", join)
+	joinByte := []byte(join)
+	util.Config.Log.Debugln("Join Command Bytes: ", join)
+	err := w.WS.WriteMessage(websocket.TextMessage, joinByte)
+	return err
+}
+
+// Connect opens a Websocket and requests the needed Capabilities and does the Login
+func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
+	// Make sure to catch the Interrupt Signal to close the WS gracefully
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
+
+	if w.Done == nil {
+		w.Done = make(chan struct{})
+	}
+
+	dialer := &websocket.Dialer{
+		NetDial: func(network, addr string) (net.Conn, error) {
+			netDialer := &net.Dialer{
+				KeepAlive: time.Minute * 60,
+			}
+			return netDialer.Dial(network, addr)
+		},
+		HandshakeTimeout: 45 * time.Second,
+	}
+	w.WS, _, err = dialer.Dial("wss://irc-ws.chat.twitch.tv:443/irc", nil)
+
 	go func() {
-		defer close(util.Done)
 		for {
-			_, message, err := util.BotUser.TwitchWS.ReadMessage()
+			select {
+			case <-w.Done:
+				util.Config.Log.Errorln("Done got closed")
+				util.Config.Log.Errorln("Reconnecting WS")
+				err = w.WS.Close()
+				w.Done = make(chan struct{})
+				err = w.Connect(oauthToken, username)
+				return
+			case <-interrupt:
+				// Cleanly close the connection by sending a close message and then
+				// waiting (with timeout) for the server to close the connection.
+				err = w.WS.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+				select {
+				case <-w.Done:
+				case <-time.After(time.Second):
+				}
+				os.Exit(0)
+				return
+			}
+		}
+	}()
+	if err != nil {
+		return
+	}
+
+	// Request needed IRC Capabilities https://dev.twitch.tv/docs/irc/#twitch-specific-irc-capabilities
+	sendErr := w.WS.WriteMessage(websocket.TextMessage, []byte("CAP REQ :twitch.tv/membership twitch.tv/tags\r\n"))
+	if sendErr != nil {
+		err = sendErr
+		return
+	}
+
+	// Login
+	sendErr = w.WS.WriteMessage(websocket.TextMessage, []byte("PASS oauth:"+oauthToken+"\r\n"))
+	if sendErr != nil {
+		err = sendErr
+		return
+	}
+	sendErr = w.WS.WriteMessage(websocket.TextMessage, []byte("NICK "+username+"\r\n"))
+	if sendErr != nil {
+		err = sendErr
+		return
+	}
+
+	w.WS.SetCloseHandler(func(code int, text string) error {
+		err := w.WS.Close()
+		if err != nil {
+			return err
+		}
+		err = w.Connect(oauthToken, username)
+		return err
+	})
+
+	return
+}
+
+// Listen answers to the PING messages by Twitch and relays messages to Matrix
+func (w *WebsocketHolder) Listen() {
+	go func() {
+		defer close(w.Done)
+		for {
+			_, message, err := util.BotUser.TwitchWS.GetWS().ReadMessage()
 			if err != nil {
 				util.Config.Log.Errorln(err)
 				return
@@ -115,7 +214,7 @@ func Listen() {
 
 							queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username] = asUser
 							queryHandler.QueryHandler().Users[asUser.Mxid] = asUser
-							err = db.SaveUser(queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username])
+							err = util.DB.SaveUser(queryHandler.QueryHandler().TwitchUsers[parsedMessage.Username])
 							if err != nil {
 								util.Config.Log.Errorln(err)
 							}
@@ -138,7 +237,7 @@ func Listen() {
 				case "PING":
 					util.Config.Log.Debugln("[TWITCH]: Respond to Ping")
 					util.BotUser.Mux.Lock()
-					util.BotUser.TwitchWS.WriteControl(websocket.PongMessage, []byte("\r\n"), time.Now().Add(10*time.Second))
+					util.BotUser.TwitchWS.GetWS().WriteControl(websocket.PongMessage, []byte("\r\n"), time.Now().Add(10*time.Second))
 					util.BotUser.Mux.Unlock()
 				default:
 					util.Config.Log.Debugf("[TWITCH]: %+v\n", parsedMessage)
@@ -171,4 +270,8 @@ func parseMessage(message string) (parsedMessage *util.TMessage) {
 	}
 
 	return
+}
+
+func (w *WebsocketHolder) GetWS() *websocket.Conn {
+	return w.WS
 }

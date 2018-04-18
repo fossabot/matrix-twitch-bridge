@@ -1,13 +1,21 @@
-package db
+package implementation
 
 import (
+	"database/sql"
+	dbHelper "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db/helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
 )
 
+type DB struct {
+	db *sql.DB
+}
+
 // SaveRoom saves a room.Room{} struct to the Database
-func SaveRoom(Room *room.Room) error {
-	db := Open()
-	tx, err := db.Begin()
+func (d *DB) SaveRoom(Room *room.Room) error {
+	if d.db == nil {
+		d.db = dbHelper.Open()
+	}
+	tx, err := d.db.Begin()
 	if err != nil {
 		return err
 	}
@@ -30,10 +38,12 @@ func SaveRoom(Room *room.Room) error {
 }
 
 // GetRooms returns all saved Rooms from the DB mapped by the alias
-func GetRooms() (rooms map[string]*room.Room, err error) {
+func (d *DB) GetRooms() (rooms map[string]*room.Room, err error) {
 	rooms = make(map[string]*room.Room)
-	db := Open()
-	rows, err := db.Query("SELECT room_alias, room_id, twitch_channel FROM rooms")
+	if d.db == nil {
+		d.db = dbHelper.Open()
+	}
+	rows, err := d.db.Query("SELECT room_alias, room_id, twitch_channel FROM rooms")
 	if err != nil {
 		return nil, err
 	}
@@ -64,8 +74,8 @@ func GetRooms() (rooms map[string]*room.Room, err error) {
 	return rooms, nil
 }
 
-func GetTwitchRooms() (rooms map[string]string, err error) {
-	nrooms, err := GetRooms()
+func (d *DB) GetTwitchRooms() (rooms map[string]string, err error) {
+	nrooms, err := d.GetRooms()
 	if err != nil {
 		return nil, err
 	}

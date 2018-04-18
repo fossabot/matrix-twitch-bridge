@@ -116,20 +116,25 @@ func Run() error {
 	}
 
 	util.Config.Log.Debugln("Start Connecting BotUser to Twitch as: ", util.BotUser.TwitchName)
-	util.BotUser.TwitchWS = &wsImpl.WebsocketHolder{
-		Done: make(chan struct{}),
-	}
-	err = util.BotUser.TwitchWS.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
-	if err != nil {
-		return err
-	}
 
 	util.Config.Log.Debugln("Start letting BotUser listen to Twitch")
-	util.BotUser.TwitchWS.Listen()
 
-	for v := range queryHandler.QueryHandler().TwitchRooms {
+	for _, v := range queryHandler.QueryHandler().Aliases {
 		util.BotUser.Mux.Lock()
-		err = util.BotUser.TwitchWS.Join(v)
+		v.TwitchWS = &wsImpl.WebsocketHolder{
+			Done:        make(chan struct{}),
+			TwitchRooms: queryHandler.QueryHandler().TwitchRooms,
+			TwitchUsers: queryHandler.QueryHandler().TwitchUsers,
+			RealUsers:   queryHandler.QueryHandler().RealUsers,
+			Users:       queryHandler.QueryHandler().Users,
+		}
+		err = v.TwitchWS.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
+		if err != nil {
+			return err
+		}
+
+		v.TwitchWS.Listen()
+		err = v.TwitchWS.Join(v.TwitchChannel)
 		util.BotUser.Mux.Unlock()
 		if err != nil {
 			return err
@@ -220,35 +225,39 @@ func useEvent(event appservice.Event) error {
 
 	util.Config.Log.Infoln("Processing Event")
 
-	util.Config.Log.Debugln("Check if we have already a open WS")
-	if mxUser.TwitchWS == nil {
-		util.Config.Log.Debugf("%+v\n", mxUser.TwitchTokenStruct)
-		if mxUser.TwitchTokenStruct != nil && mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
-			var err error
-
-			util.Config.Log.Debugln("Connect new WS to Twitch")
-			util.BotUser.TwitchWS = &wsImpl.WebsocketHolder{
-				Done: make(chan struct{}),
-			}
-			err = util.BotUser.TwitchWS.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
-			if err != nil {
-				return err
-			}
-		} else {
-			return nil
-		}
-	}
-
 	util.Config.Log.Debugln("Check if Room of event is known")
 	for _, v := range qHandler.Aliases {
 		if v.ID == event.RoomID {
+
+			util.Config.Log.Debugln("Check if we have already a open WS")
+			if mxUser.TwitchWS == nil {
+				util.Config.Log.Debugf("%+v\n", mxUser.TwitchTokenStruct)
+				if mxUser.TwitchTokenStruct != nil && mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
+					var err error
+
+					util.Config.Log.Debugln("Connect new WS to Twitch")
+					v.TwitchWS = &wsImpl.WebsocketHolder{
+						Done:        make(chan struct{}),
+						TwitchRooms: queryHandler.QueryHandler().TwitchRooms,
+						TwitchUsers: queryHandler.QueryHandler().TwitchUsers,
+						RealUsers:   queryHandler.QueryHandler().RealUsers,
+						Users:       queryHandler.QueryHandler().Users,
+					}
+					err = v.TwitchWS.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
+					if err != nil {
+						return err
+					}
+				} else {
+					return nil
+				}
+			}
 
 			util.Config.Log.Debugln("Check if text or other Media")
 			if event.Content["msgtype"] == "m.text" {
 				util.Config.Log.Debugln("Send message to twitch")
 
 				util.BotUser.Mux.Lock()
-				err := util.BotUser.TwitchWS.Send(v.TwitchChannel, event.Content["body"].(string))
+				err := v.TwitchWS.Send(v.TwitchChannel, event.Content["body"].(string))
 				util.BotUser.Mux.Unlock()
 				if err != nil {
 					return err

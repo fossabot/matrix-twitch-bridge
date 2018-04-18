@@ -4,6 +4,7 @@ import (
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/api"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/websocket/implementation"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/matrix-org/gomatrix"
@@ -88,7 +89,14 @@ func (q queryHandler) QueryAlias(alias string) bool {
 	}
 
 	util.BotUser.Mux.Lock()
-	err = util.BotUser.TwitchWS.Join(tUsername)
+	q.Aliases[alias].TwitchWS = &implementation.WebsocketHolder{
+		Done:        make(chan struct{}),
+		TwitchRooms: q.TwitchRooms,
+		TwitchUsers: q.TwitchUsers,
+		RealUsers:   q.RealUsers,
+		Users:       q.Users,
+	}
+	err = q.Aliases[alias].TwitchWS.Join(tUsername)
 	util.BotUser.Mux.Unlock()
 	if err != nil {
 		util.Config.Log.Errorln(err)

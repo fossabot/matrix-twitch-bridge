@@ -4,6 +4,7 @@ package implementation
 import (
 	"fmt"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/api"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
@@ -75,8 +76,16 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 				util.Config.Log.Errorln("Done got closed")
 				util.Config.Log.Errorln("Reconnecting WS")
 				err = w.WS.Close()
-				w.WS = nil
-				w.Done = make(chan struct{})
+				if err != nil {
+					return
+				}
+				*w = WebsocketHolder{
+					Done:        make(chan struct{}),
+					TwitchRooms: queryHandler.QueryHandler().TwitchRooms,
+					TwitchUsers: queryHandler.QueryHandler().TwitchUsers,
+					RealUsers:   queryHandler.QueryHandler().RealUsers,
+					Users:       queryHandler.QueryHandler().Users,
+				}
 				err = w.Connect(oauthToken, username)
 				return
 			case <-interrupt:

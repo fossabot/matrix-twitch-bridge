@@ -116,7 +116,9 @@ func Run() error {
 	}
 
 	util.Config.Log.Debugln("Start Connecting BotUser to Twitch as: ", util.BotUser.TwitchName)
-	util.BotUser.TwitchWS = &wsImpl.WebsocketHolder{}
+	util.BotUser.TwitchWS = &wsImpl.WebsocketHolder{
+		Done: make(chan struct{}),
+	}
 	err = util.BotUser.TwitchWS.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
 	if err != nil {
 		return err
@@ -225,7 +227,9 @@ func useEvent(event appservice.Event) error {
 			var err error
 
 			util.Config.Log.Debugln("Connect new WS to Twitch")
-			util.BotUser.TwitchWS = &wsImpl.WebsocketHolder{}
+			util.BotUser.TwitchWS = &wsImpl.WebsocketHolder{
+				Done: make(chan struct{}),
+			}
 			err = util.BotUser.TwitchWS.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
 			if err != nil {
 				return err

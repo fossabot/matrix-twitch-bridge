@@ -145,6 +145,7 @@ func (d *DB) getUsers() (users *userTransportStruct, err error) {
 			}
 
 			var wsHolder *wsImpl.WebsocketHolder
+			wsHolder.Done = make(chan struct{})
 			if TwitchToken != nil {
 				util.Config.Log.Debugln("tName used for ws nick: ", twitchName)
 				err = wsHolder.Connect(TwitchToken.AccessToken, twitchName)
@@ -168,6 +169,7 @@ func (d *DB) getUsers() (users *userTransportStruct, err error) {
 			}
 
 			var wsHolder *wsImpl.WebsocketHolder
+			wsHolder.Done = make(chan struct{})
 			err := wsHolder.Connect(TwitchToken, twitchName)
 			if err != nil {
 				return nil, err

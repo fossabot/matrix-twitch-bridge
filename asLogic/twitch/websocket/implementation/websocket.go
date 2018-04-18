@@ -52,8 +52,6 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	w.Done = make(chan struct{})
-
 	dialer := &websocket.Dialer{
 		NetDial: func(network, addr string) (net.Conn, error) {
 			netDialer := &net.Dialer{

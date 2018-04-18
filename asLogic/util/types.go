@@ -1,6 +1,7 @@
 package util
 
 import (
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"maunium.net/go/mautrix-appservice-go"
 )
@@ -14,9 +15,6 @@ var BotUser *user.BotUser
 var BotAToken string
 
 var BotUName string
-
-// Done is used to gracefully exit all WS connections
-var Done chan struct{}
 
 // CfgFile holds the location of the Config File
 var CfgFile string
@@ -35,6 +33,8 @@ var TLSCert string
 var TLSKey string
 
 var Publicaddress string
+
+var DB db.Handler
 
 // TMessage is a struct with information about a Message send by Twitch
 type TMessage struct {

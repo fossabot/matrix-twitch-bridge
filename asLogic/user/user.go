@@ -1,10 +1,11 @@
 package user
 
 import (
-	"github.com/gorilla/websocket"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/websocket"
 	"github.com/matrix-org/gomatrix"
 	"golang.org/x/oauth2"
 	"net/http"
+	"sync"
 )
 
 // ASUser contains the required Information for a User managed by the Appservice and holds a Matrix Client
@@ -21,9 +22,10 @@ type RealUser struct {
 	TwitchName        string
 	TwitchTokenStruct *oauth2.Token
 	TwitchHTTPClient  *http.Client
-	TwitchWS          *websocket.Conn
+	TwitchWS          websocket.WebsocketHolder
 	// Room holds a ID of a room with the Real User and the Bot
 	Room string
+	Mux  sync.Mutex
 }
 
 // BotUser contains the required Information for a Bot User
@@ -32,6 +34,7 @@ type BotUser struct {
 	Mxid        string
 	TwitchName  string
 	TwitchToken string
-	TwitchWS    *websocket.Conn
+	TwitchWS    websocket.WebsocketHolder
+	Mux         sync.Mutex
 	MXClient    *gomatrix.Client
 }

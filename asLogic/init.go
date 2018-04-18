@@ -2,14 +2,16 @@ package asLogic
 
 import (
 	"fmt"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
+	dbImpl "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db/implementation"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/login"
+	wsImpl "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/websocket/implementation"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
 	"github.com/fatih/color"
 	"github.com/gorilla/mux"
+	"log"
+	"maunium.net/go/maulogger"
 	"maunium.net/go/mautrix-appservice-go"
 	"net/http"
 	"os"
@@ -18,7 +20,7 @@ import (
 // Init starts the interactive Config generator and exits
 func Init() {
 	var boldGreen = color.New(color.FgGreen).Add(color.Bold)
-	appservice.GenerateRegistration("twitch", "twitch", true, true)
+	appservice.GenerateRegistration("twitch", "appservice-twitch", true, true)
 	boldGreen.Println("Please restart the Twitch-Appservice with \"--client_id\"-flag applied")
 }
 
@@ -30,40 +32,63 @@ func prepareRun() error {
 		return err
 	}
 
+	util.Config.Registration, err = appservice.LoadRegistration(util.Config.RegistrationPath)
+
+	util.Config.Log = maulogger.Create()
+	util.Config.LogConfig.Debug = true
+	util.Config.LogConfig.Configure(util.Config.Log)
+	util.Config.Log.Debugln("Logger initialized successfully.")
+
+	util.DB = &dbImpl.DB{}
+
+	util.Config.Log.Debugln("Creating queryHandler.")
 	qHandler := queryHandler.QueryHandler()
 
-	qHandler.TwitchRooms, err = db.GetTwitchRooms()
+	util.Config.Log.Debugln("Loading Twitch Rooms from DB.")
+	qHandler.TwitchRooms, err = util.DB.GetTwitchRooms()
 	if err != nil {
 		return err
 	}
 
-	qHandler.Aliases, err = db.GetRooms()
+	util.Config.Log.Debugln("Loading Rooms from DB.")
+	qHandler.Aliases, err = util.DB.GetRooms()
 	if err != nil {
 		return err
 	}
 
-	qHandler.TwitchUsers, err = db.GetTwitchUsers()
+	util.Config.Log.Debugln("Loading Twitch Users from DB.")
+	qHandler.TwitchUsers, err = util.DB.GetTwitchUsers()
 	if err != nil {
 		return err
 	}
 
-	qHandler.Users, err = db.GetASUsers()
+	util.Config.Log.Debugln("Loading AS Users from DB.")
+	qHandler.Users, err = util.DB.GetASUsers()
 	if err != nil {
 		return err
 	}
 
-	qHandler.RealUsers, err = db.GetRealUsers()
+	util.Config.Log.Debugln("Loading Real Users from DB.")
+	qHandler.RealUsers, err = util.DB.GetRealUsers()
 	if err != nil {
 		return err
 	}
 
-	util.BotUser, err = db.GetBotUser()
+	util.Config.Log.Debugln("Loading Bot User from DB.")
+	util.BotUser, err = util.DB.GetBotUser()
 	if err != nil {
 		return err
 	}
 
-	util.Config.Init(qHandler)
+	util.Config.Log.Infoln("Init...")
+	util.Config.Log.Close()
+	_, err = util.Config.Init(qHandler)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	util.Config.Log.Infoln("Init Done...")
 
+	util.Config.Log.Infoln("Starting public server...")
 	r := mux.NewRouter()
 	r.HandleFunc("/callback", login.Callback).Methods(http.MethodGet)
 
@@ -80,8 +105,6 @@ func prepareRun() error {
 		}
 	}()
 
-	util.Config.Listen()
-
 	return nil
 }
 
@@ -92,38 +115,156 @@ func Run() error {
 		return err
 	}
 
-	util.BotUser.TwitchWS, err = twitch.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
+	util.Config.Log.Debugln("Start Connecting BotUser to Twitch as: ", util.BotUser.TwitchName)
+	util.BotUser.TwitchWS = &wsImpl.WebsocketHolder{
+		Done: make(chan struct{}),
+	}
+	err = util.BotUser.TwitchWS.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
 	if err != nil {
 		return err
 	}
 
-	twitch.Listen(queryHandler.QueryHandler().TwitchUsers, queryHandler.QueryHandler().TwitchRooms)
+	util.Config.Log.Debugln("Start letting BotUser listen to Twitch")
+	util.BotUser.TwitchWS.Listen()
 
-	for {
-		select {
-		case event := <-util.Config.Events:
-			switch event.Type {
-			case "m.room.message":
-				qHandler := queryHandler.QueryHandler()
-				mxUser := qHandler.RealUsers[event.SenderID]
-				if mxUser == nil {
-					mxUser = &user.RealUser{}
-					mxUser.Mxid = event.SenderID
-					db.SaveUser(mxUser, "REAL")
-					login.SendLoginURL(mxUser)
-					continue
-				}
-				if mxUser.TwitchWS == nil {
-					if mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
-						mxUser.TwitchWS, err = twitch.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
-						if err != nil {
-							util.Config.Log.Errorln(err)
-							continue
+	for v := range queryHandler.QueryHandler().TwitchRooms {
+		util.BotUser.Mux.Lock()
+		err = util.BotUser.TwitchWS.Join(v)
+		util.BotUser.Mux.Unlock()
+		if err != nil {
+			return err
+		}
+	}
+
+	go func() {
+		for {
+			select {
+			case event := <-util.Config.Events:
+				util.Config.Log.Debugln("Got Event")
+				switch event.Type {
+				case "m.room.member":
+					if event.Content["membership"] == "join" {
+
+						qHandler := queryHandler.QueryHandler()
+						for _, v := range qHandler.Aliases {
+							if v.ID == event.RoomID {
+								if event.SenderID != util.BotUser.MXClient.UserID {
+									err = joinEventHandler(event)
+									if err != nil {
+										util.Config.Log.Errorln(err)
+									}
+								}
+							}
+						}
+						continue
+
+					}
+				case "m.room.message":
+					qHandler := queryHandler.QueryHandler()
+					for _, v := range qHandler.Aliases {
+						if v.ID == event.RoomID {
+							if event.SenderID != util.BotUser.MXClient.UserID {
+								err = useEvent(event)
+								if err != nil {
+									util.Config.Log.Errorln(err)
+								}
+							}
 						}
 					}
-				}
+					continue
 
+				}
+			}
+		}
+	}()
+
+	util.Config.Log.Infoln("Starting Appservice Server...")
+	util.Config.Listen()
+
+	select {}
+}
+
+func joinEventHandler(event appservice.Event) error {
+	qHandler := queryHandler.QueryHandler()
+	mxUser := qHandler.RealUsers[event.SenderID]
+	asUser := qHandler.Users[event.SenderID]
+	util.Config.Log.Debugf("AS User: %+v\n", asUser)
+	if asUser != nil || util.BotUser.Mxid == event.SenderID {
+		return nil
+	}
+	if mxUser == nil {
+		util.Config.Log.Debugln("Creating new User")
+
+		qHandler.RealUsers[event.SenderID] = &user.RealUser{}
+		mxUser := qHandler.RealUsers[event.SenderID]
+		mxUser.Mxid = event.SenderID
+
+		util.Config.Log.Debugln("Let new User Login")
+		err := login.SendLoginURL(mxUser)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	return nil
+}
+
+func useEvent(event appservice.Event) error {
+	qHandler := queryHandler.QueryHandler()
+	mxUser := qHandler.RealUsers[event.SenderID]
+	asUser := qHandler.Users[event.SenderID]
+	util.Config.Log.Debugf("AS User: %+v\n", asUser)
+	if asUser != nil || util.BotUser.Mxid == event.SenderID || mxUser == nil {
+		return nil
+	}
+
+	util.Config.Log.Infoln("Processing Event")
+
+	util.Config.Log.Debugln("Check if we have already a open WS")
+	if mxUser.TwitchWS == nil {
+		util.Config.Log.Debugf("%+v\n", mxUser.TwitchTokenStruct)
+		if mxUser.TwitchTokenStruct != nil && mxUser.TwitchTokenStruct.AccessToken != "" && mxUser.TwitchName != "" {
+			var err error
+
+			util.Config.Log.Debugln("Connect new WS to Twitch")
+			util.BotUser.TwitchWS = &wsImpl.WebsocketHolder{
+				Done: make(chan struct{}),
+			}
+			err = util.BotUser.TwitchWS.Connect(mxUser.TwitchTokenStruct.AccessToken, mxUser.TwitchName)
+			if err != nil {
+				return err
+			}
+		} else {
+			return nil
+		}
+	}
+
+	util.Config.Log.Debugln("Check if Room of event is known")
+	for _, v := range qHandler.Aliases {
+		if v.ID == event.RoomID {
+
+			util.Config.Log.Debugln("Check if text or other Media")
+			if event.Content["msgtype"] == "m.text" {
+				util.Config.Log.Debugln("Send message to twitch")
+
+				util.BotUser.Mux.Lock()
+				err := util.BotUser.TwitchWS.Send(v.TwitchChannel, event.Content["body"].(string))
+				util.BotUser.Mux.Unlock()
+				if err != nil {
+					return err
+				}
+			} else {
+				util.Config.Log.Debugln("Send message to bridge Room to tell user to use plain text")
+				resp, err := util.BotUser.MXClient.GetDisplayName(event.SenderID)
+				if err != nil {
+					return err
+				}
+				_, err = util.BotUser.MXClient.SendNotice(event.RoomID, resp.DisplayName+": Please use Text only as Twitch doesn't support any other Media Format!")
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
+	return nil
 }

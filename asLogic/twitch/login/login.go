@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
-	twitch2 "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
+	"github.com/matrix-org/gomatrix"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/twitch"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -21,7 +22,8 @@ func SendLoginURL(ruser *user.RealUser) error {
 		conf = &oauth2.Config{
 			ClientID:     util.ClientID,
 			ClientSecret: util.ClientSecret,
-			Scopes:       []string{"chat_login"},
+			Scopes:       []string{"chat_login", "user_read"},
+			RedirectURL:  "https://" + util.Publicaddress + "/callback",
 			Endpoint:     twitch.Endpoint,
 		}
 	}
@@ -37,9 +39,28 @@ func SendLoginURL(ruser *user.RealUser) error {
 		ruser.Room = resp.RoomID
 	}
 
-	util.BotUser.MXClient.SendNotice(ruser.Room, "Please Login to Twitch using the following URL: "+url+"\n You will get redirected to a Magic Page which you can close as soon as it loaded.")
+	joinedResp, err := util.BotUser.MXClient.JoinedMembers(ruser.Room)
+	if err != nil {
+		return err
+	}
+	if _, ok := joinedResp.Joined[ruser.Mxid]; !ok {
+		// Workaround gomatrix bug
 
-	return nil
+		inviteReq := &gomatrix.ReqInviteUser{
+			UserID: ruser.Mxid,
+		}
+
+		u := util.BotUser.MXClient.BuildURL("rooms", ruser.Room, "invite")
+		resp := &gomatrix.RespInviteUser{}
+		_, err = util.BotUser.MXClient.MakeRequest("POST", u, inviteReq, &resp)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = util.BotUser.MXClient.SendNotice(ruser.Room, "Please Login to Twitch using the following URL: "+url+"\n You will get redirected to a Magic Page which you can close as soon as it loaded.")
+
+	return err
 }
 
 // Get Info about the just logged in User: https://api.twitch.tv/kraken/user?oauth_token=<token we got from the login>
@@ -68,31 +89,51 @@ type profile struct {
 func Callback(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	query := r.URL.Query()
-	code, cok := query["code"]
-	state, sok := query["state"]
-	if sok && cok {
-		tok, err := conf.Exchange(ctx, code[0])
+	code := query.Get("code")
+	state := query.Get("state")
+	if state != "" && code != "" {
+		tok, err := conf.Exchange(ctx, code)
 		if err != nil {
+			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-		queryHandler.QueryHandler().RealUsers[state[0]].TwitchTokenStruct = tok
-		queryHandler.QueryHandler().RealUsers[state[0]].TwitchHTTPClient = conf.Client(ctx, tok)
-		queryHandler.QueryHandler().RealUsers[state[0]].TwitchHTTPClient.Timeout = time.Second * 10
+		queryHandler.QueryHandler().RealUsers[state].TwitchTokenStruct = tok
+		queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient = conf.Client(ctx, tok)
+		queryHandler.QueryHandler().RealUsers[state].TwitchHTTPClient.Timeout = time.Second * 10
 
 		var p profile
 
-		resp, err := queryHandler.QueryHandler().RealUsers[state[0]].TwitchHTTPClient.Get("https://api.twitch.tv/kraken/user?oauth_token=" + tok.AccessToken)
+		req, err := http.NewRequest("GET", "https://api.twitch.tv/kraken/user?oauth_token="+tok.AccessToken, nil)
+		client := &http.Client{}
+		resp, err := client.Do(req)
 		if err != nil {
+			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		if resp.Body == nil {
+			util.Config.Log.Errorln("Body is empty")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		defer resp.Body.Close()
 
-		err = json.NewDecoder(resp.Body).Decode(&p)
-		queryHandler.QueryHandler().RealUsers[state[0]].TwitchWS, err = twitch2.Connect(tok.AccessToken, p.Name)
+		body, err := ioutil.ReadAll(resp.Body)
+
+		err = json.Unmarshal(body, &p)
 		if err != nil {
+			util.Config.Log.Errorln(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		util.Config.Log.Debugf("p: %+v\n", p)
+
+		queryHandler.QueryHandler().RealUsers[state].TwitchName = p.Name
+		util.Config.Log.Debugln(p.Name)
+
+		util.DB.SaveUser(queryHandler.QueryHandler().RealUsers[state])
+
+		err = queryHandler.QueryHandler().RealUsers[state].TwitchWS.Connect(tok.AccessToken, p.Name)
+		if err != nil {
+			util.Config.Log.Errorln(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}

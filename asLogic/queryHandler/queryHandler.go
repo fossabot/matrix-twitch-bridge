@@ -1,7 +1,6 @@
 package queryHandler
 
 import (
-	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/room"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/api"
@@ -50,26 +49,22 @@ func (q queryHandler) QueryAlias(alias string) bool {
 	var displayname string
 	var logoURL string
 	for _, v := range util.Config.Registration.Namespaces.RoomAliases {
-		r, err := regexp.Compile(v.Regex)
+		// name magic
+		pre := strings.Split(v.Regex, ".+")[0]
+		suff := strings.Split(v.Regex, ".+")[1]
+		tUsername = strings.TrimSuffix(strings.TrimPrefix(alias, pre), suff)
+		userdata, err := api.RequestUserData(tUsername)
 		if err != nil {
 			util.Config.Log.Errorln(err)
 			return false
 		}
-		if r.MatchString(alias) {
-			tUsername := r.FindStringSubmatch(alias)[0]
-			userdata, err := api.RequestUserData(tUsername)
-			if err != nil {
-				util.Config.Log.Errorln(err)
-				return false
-			}
-			if userdata.Total == 0 {
-				util.Config.Log.Errorln("user missing")
-				return false
-			}
-			displayname = userdata.Users[0].DisplayName
-			logoURL = userdata.Users[0].Logo
-			break
+		if userdata.Total == 0 {
+			util.Config.Log.Errorln("user missing")
+			return false
 		}
+		displayname = userdata.Users[0].DisplayName
+		logoURL = userdata.Users[0].Logo
+		break
 	}
 
 	resp, err := matrix_helper.CreateRoom(client, displayname, logoURL, roomalias, "public_chat")
@@ -78,6 +73,8 @@ func (q queryHandler) QueryAlias(alias string) bool {
 		return false
 	}
 
+	// TODO PUBLISH TO ROOM DICT
+
 	troom := &room.Room{
 		Alias:         alias,
 		ID:            resp.RoomID,
@@ -85,11 +82,18 @@ func (q queryHandler) QueryAlias(alias string) bool {
 	}
 	q.Aliases[alias] = troom
 	q.TwitchRooms[troom.TwitchChannel] = troom.ID
-	err = db.SaveRoom(troom)
+	err = util.DB.SaveRoom(troom)
 	if err != nil {
 		util.Config.Log.Errorln(err)
 	}
-	return false
+
+	util.BotUser.Mux.Lock()
+	err = util.BotUser.TwitchWS.Join(tUsername)
+	util.BotUser.Mux.Unlock()
+	if err != nil {
+		util.Config.Log.Errorln(err)
+	}
+	return true
 }
 
 // QueryUser is the logic that creates if needed a AS managed user
@@ -150,7 +154,7 @@ func (q queryHandler) QueryUser(userID string) bool {
 	client.SetAvatarURL(resp.ContentURI)
 
 	q.Users[userID] = &asUser
-	err = db.SaveUser(q.Users[userID], "AS")
+	err = util.DB.SaveUser(q.Users[userID])
 	if err != nil {
 		util.Config.Log.Errorln(err)
 	}

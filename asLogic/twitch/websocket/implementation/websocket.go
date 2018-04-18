@@ -38,6 +38,7 @@ func (w *WebsocketHolder) Send(channel, messageRaw string) error {
 
 func (w *WebsocketHolder) Join(channel string) error {
 	// Join Room
+	w.WS.SetWriteDeadline(time.Now().Add(time.Minute * 2))
 	join := "JOIN #" + channel + "\r\n"
 	util.Config.Log.Debugln("Join Command: ", join)
 	joinByte := []byte(join)

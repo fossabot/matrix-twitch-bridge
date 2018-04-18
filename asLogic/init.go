@@ -35,7 +35,6 @@ func prepareRun() error {
 	util.Config.Registration, err = appservice.LoadRegistration(util.Config.RegistrationPath)
 
 	util.Config.Log = maulogger.Create()
-	util.Config.LogConfig.Debug = true
 	util.Config.LogConfig.Configure(util.Config.Log)
 	util.Config.Log.Debugln("Logger initialized successfully.")
 

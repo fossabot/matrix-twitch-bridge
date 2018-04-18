@@ -41,6 +41,18 @@ func (w *WebsocketHolder) Send(channel, messageRaw string) error {
 	return err
 }
 
+func (w *WebsocketHolder) Pong(server string) error {
+	// Send Pong
+	message := "PONG :" + server + "\r\n"
+	deadline := time.Now().Add(time.Second * 5)
+	err := w.WS.SetWriteDeadline(deadline)
+	if err != nil {
+		return err
+	}
+	err = w.WS.WriteMessage(websocket.TextMessage, []byte(message))
+	return err
+}
+
 func (w *WebsocketHolder) Join(channel string) error {
 	// Join Room
 	w.WS.SetWriteDeadline(time.Now().Add(time.Minute * 2))
@@ -257,8 +269,7 @@ func (w *WebsocketHolder) Listen() {
 				case "PING":
 					util.Config.Log.Debugln("[TWITCH]: Respond to Ping")
 					util.BotUser.Mux.Lock()
-					// TODO Send twitch Pong instead WS Pong
-					w.WS.WriteControl(websocket.PongMessage, []byte("\r\n"), time.Now().Add(10*time.Second))
+					w.Pong(parsedMessage.Message)
 					util.BotUser.Mux.Unlock()
 				default:
 					util.Config.Log.Debugf("[TWITCH]: %+v\n", parsedMessage)

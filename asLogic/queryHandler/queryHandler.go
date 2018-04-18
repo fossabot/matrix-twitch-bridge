@@ -74,7 +74,7 @@ func (q queryHandler) QueryAlias(alias string) bool {
 		return false
 	}
 
-	// TODO PUBLISH TO ROOM DICT
+	// TODO PUBLISH TO ROOM DICT ( https://matrix.org/docs/spec/client_server/r0.3.0.html#put-matrix-client-r0-directory-room-roomalias )
 
 	troom := &room.Room{
 		Alias:         alias,

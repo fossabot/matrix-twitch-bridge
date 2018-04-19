@@ -91,7 +91,7 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 				grerr := w.WS.Close()
 				if grerr != nil {
 					util.Config.Log.Errorln(grerr)
-					return
+					// TODO fix properly so this can exit
 				}
 				util.Config.Log.Warnf("%s died\n", w.TRoom)
 				util.Config.Log.Warnln("Reconnecting WS...")

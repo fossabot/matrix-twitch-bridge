@@ -85,13 +85,13 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 		for {
 			select {
 			case <-w.Done:
-				util.Config.Log.Errorln("Done got closed")
-				util.Config.Log.Errorln("Reconnecting WS")
+				util.Config.Log.Warnln("Done got closed")
 				err = w.WS.Close()
 				if err != nil {
 					return
 				}
-				oldRoom := w.TRoom
+				util.Config.Log.Warnln(w.TRoom + " died")
+				util.Config.Log.Warnln("Reconnecting WS...")
 				*w = WebsocketHolder{
 					Done:        make(chan struct{}),
 					TwitchRooms: w.TwitchRooms,
@@ -100,14 +100,14 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 					Users:       w.Users,
 					TRoom:       w.TRoom,
 				}
-				if oldRoom != "" {
-					w.TRoom = oldRoom
-				}
 				err = w.Connect(oauthToken, username)
 				if err != nil {
 					return
 				}
-				err = w.Join(w.TRoom)
+				if w.TRoom != "" {
+					err = w.Join(w.TRoom)
+				}
+
 				return
 			case <-interrupt:
 				// Cleanly close the connection by sending a close message and then

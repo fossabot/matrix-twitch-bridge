@@ -68,13 +68,13 @@ func (q queryHandler) QueryAlias(alias string) bool {
 		break
 	}
 
-	resp, err := matrix_helper.CreateRoom(client, displayname, logoURL, roomalias, "public_chat")
+	resp, err := matrix_helper.CreateRoom(client, displayname, logoURL, roomalias, "public_chat", false)
 	if err != nil {
 		util.Config.Log.Errorln(err)
 		return false
 	}
 
-	// TODO PUBLISH TO ROOM DICT
+	// TODO PUBLISH TO ROOM DICT ( https://matrix.org/docs/spec/client_server/r0.3.0.html#put-matrix-client-r0-directory-room-roomalias )
 
 	troom := &room.Room{
 		Alias:         alias,
@@ -95,6 +95,7 @@ func (q queryHandler) QueryAlias(alias string) bool {
 		TwitchUsers: q.TwitchUsers,
 		RealUsers:   q.RealUsers,
 		Users:       q.Users,
+		TRoom:       tUsername,
 	}
 	err = q.Aliases[alias].TwitchWS.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
 	err = q.Aliases[alias].TwitchWS.Join(tUsername)

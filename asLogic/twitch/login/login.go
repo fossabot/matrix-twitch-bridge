@@ -32,7 +32,7 @@ func SendLoginURL(ruser *user.RealUser) error {
 	url := conf.AuthCodeURL(ruser.Mxid, oauth2.AccessTypeOffline)
 
 	if ruser.Room == "" {
-		resp, err := matrix_helper.CreateRoom(util.BotUser.MXClient, "Twitch Bot", "", "", "trusted_private_chat")
+		resp, err := matrix_helper.CreateRoom(util.BotUser.MXClient, "Twitch Bot", "", "", "trusted_private_chat", true)
 		if err != nil {
 			return err
 		}

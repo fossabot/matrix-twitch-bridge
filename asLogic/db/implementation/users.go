@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	dbHelper "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/db/helper"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/matrix_helper"
+	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/queryHandler"
 	wsImpl "github.com/Nordgedanken/matrix-twitch-bridge/asLogic/twitch/websocket/implementation"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/user"
 	"github.com/Nordgedanken/matrix-twitch-bridge/asLogic/util"
@@ -146,6 +147,11 @@ func (d *DB) getUsers() (users *userTransportStruct, err error) {
 
 			wsHolder := &wsImpl.WebsocketHolder{
 				Done: make(chan struct{}),
+
+				TwitchRooms: queryHandler.QueryHandler().TwitchRooms,
+				TwitchUsers: queryHandler.QueryHandler().TwitchUsers,
+				RealUsers:   queryHandler.QueryHandler().RealUsers,
+				Users:       queryHandler.QueryHandler().Users,
 			}
 			if TwitchToken != nil {
 				util.Config.Log.Debugln("tName used for ws nick: ", twitchName)

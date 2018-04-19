@@ -126,6 +126,7 @@ func Run() error {
 			TwitchUsers: queryHandler.QueryHandler().TwitchUsers,
 			RealUsers:   queryHandler.QueryHandler().RealUsers,
 			Users:       queryHandler.QueryHandler().Users,
+			TRoom:       v.TwitchChannel,
 		}
 		err = v.TwitchWS.Connect(util.BotUser.TwitchToken, util.BotUser.TwitchName)
 		if err != nil {

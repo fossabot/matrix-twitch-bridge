@@ -20,7 +20,8 @@ type WebsocketHolder struct {
 	// Websocket
 	WS *websocket.Conn
 	// Done is used to gracefully exit all WS connections
-	Done chan struct{}
+	Done  chan struct{}
+	TRoom string
 
 	Users       map[string]*user.ASUser
 	RealUsers   map[string]*user.RealUser
@@ -31,6 +32,18 @@ type WebsocketHolder struct {
 func (w *WebsocketHolder) Send(channel, messageRaw string) error {
 	// Send Message
 	message := "PRIVMSG #" + channel + " :" + messageRaw + "\r\n"
+	deadline := time.Now().Add(time.Second * 5)
+	err := w.WS.SetWriteDeadline(deadline)
+	if err != nil {
+		return err
+	}
+	err = w.WS.WriteMessage(websocket.TextMessage, []byte(message))
+	return err
+}
+
+func (w *WebsocketHolder) Pong(server string) error {
+	// Send Pong
+	message := "PONG :" + server + "\r\n"
 	deadline := time.Now().Add(time.Second * 5)
 	err := w.WS.SetWriteDeadline(deadline)
 	if err != nil {
@@ -72,20 +85,40 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 		for {
 			select {
 			case <-w.Done:
-				util.Config.Log.Errorln("Done got closed")
-				util.Config.Log.Errorln("Reconnecting WS")
-				err = w.WS.Close()
-				if err != nil {
-					return
+				util.Config.Log.Warnln("Done got closed")
+				util.Config.Log.Warnln("Closing old WS")
+				w.WS.SetWriteDeadline(time.Now().Add(time.Minute * 2))
+				grerr := w.WS.Close()
+				if grerr != nil {
+					util.Config.Log.Errorln(grerr)
+					// TODO fix properly so this can exit
 				}
+				util.Config.Log.Warnf("%s died\n", w.TRoom)
+				util.Config.Log.Warnln("Reconnecting WS...")
+				util.Config.Log.Warnln("Replacing Websocket Holder")
 				*w = WebsocketHolder{
 					Done:        make(chan struct{}),
 					TwitchRooms: w.TwitchRooms,
 					TwitchUsers: w.TwitchUsers,
 					RealUsers:   w.RealUsers,
 					Users:       w.Users,
+					TRoom:       w.TRoom,
 				}
-				err = w.Connect(oauthToken, username)
+				util.Config.Log.Warnln("Start WS Connection")
+				grerr = w.Connect(oauthToken, username)
+				if grerr != nil {
+					util.Config.Log.Errorln(grerr)
+					return
+				}
+				if w.TRoom != "" {
+					util.Config.Log.Warnln("ReJoin Room")
+					grerr = w.Join(w.TRoom)
+					if grerr != nil {
+						util.Config.Log.Errorln(grerr)
+						return
+					}
+				}
+
 				return
 			case <-interrupt:
 				// Cleanly close the connection by sending a close message and then
@@ -213,13 +246,18 @@ func (w *WebsocketHolder) Listen() {
 							if err != nil {
 								util.Config.Log.Errorln(err)
 							}
-							resp, err := client.UploadLink(userdata.Users[0].Logo)
-							if err != nil {
-								util.Config.Log.Errorln(err)
+							var resp *gomatrix.RespMediaUpload
+							if userdata.Users[0].Logo != "" {
+								resp, err = client.UploadLink(userdata.Users[0].Logo)
+								if err != nil {
+									util.Config.Log.Errorln(err)
+								}
 							}
-							err = client.SetAvatarURL(resp.ContentURI)
-							if err != nil {
-								util.Config.Log.Errorln(err)
+							if resp != nil && resp.ContentURI != "" {
+								err = client.SetAvatarURL(resp.ContentURI)
+								if err != nil {
+									util.Config.Log.Errorln(err)
+								}
 							}
 
 							w.TwitchUsers[parsedMessage.Username] = asUser
@@ -246,9 +284,7 @@ func (w *WebsocketHolder) Listen() {
 					asUser.MXClient.SendText(room, parsedMessage.Message)
 				case "PING":
 					util.Config.Log.Debugln("[TWITCH]: Respond to Ping")
-					util.BotUser.Mux.Lock()
-					w.WS.WriteControl(websocket.PongMessage, []byte("\r\n"), time.Now().Add(10*time.Second))
-					util.BotUser.Mux.Unlock()
+					w.Pong(parsedMessage.Message)
 				default:
 					util.Config.Log.Debugf("[TWITCH]: %+v\n", parsedMessage)
 				}

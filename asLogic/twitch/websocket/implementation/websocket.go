@@ -235,13 +235,18 @@ func (w *WebsocketHolder) Listen() {
 							if err != nil {
 								util.Config.Log.Errorln(err)
 							}
-							resp, err := client.UploadLink(userdata.Users[0].Logo)
-							if err != nil {
-								util.Config.Log.Errorln(err)
+							var resp *gomatrix.RespMediaUpload
+							if userdata.Users[0].Logo != "" {
+								resp, err = client.UploadLink(userdata.Users[0].Logo)
+								if err != nil {
+									util.Config.Log.Errorln(err)
+								}
 							}
-							err = client.SetAvatarURL(resp.ContentURI)
-							if err != nil {
-								util.Config.Log.Errorln(err)
+							if resp.ContentURI != "" {
+								err = client.SetAvatarURL(resp.ContentURI)
+								if err != nil {
+									util.Config.Log.Errorln(err)
+								}
 							}
 
 							w.TwitchUsers[parsedMessage.Username] = asUser

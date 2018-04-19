@@ -86,8 +86,9 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 			select {
 			case <-w.Done:
 				util.Config.Log.Warnln("Done got closed")
-				err = w.WS.Close()
-				if err != nil {
+				grerr := w.WS.Close()
+				if grerr != nil {
+					util.Config.Log.Errorln(grerr)
 					return
 				}
 				util.Config.Log.Warnln(w.TRoom + " died")
@@ -100,12 +101,17 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 					Users:       w.Users,
 					TRoom:       w.TRoom,
 				}
-				err = w.Connect(oauthToken, username)
-				if err != nil {
+				grerr = w.Connect(oauthToken, username)
+				if grerr != nil {
+					util.Config.Log.Errorln(grerr)
 					return
 				}
 				if w.TRoom != "" {
-					err = w.Join(w.TRoom)
+					grerr = w.Join(w.TRoom)
+					if grerr != nil {
+						util.Config.Log.Errorln(grerr)
+						return
+					}
 				}
 
 				return

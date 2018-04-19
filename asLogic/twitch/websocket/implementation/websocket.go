@@ -242,7 +242,7 @@ func (w *WebsocketHolder) Listen() {
 									util.Config.Log.Errorln(err)
 								}
 							}
-							if resp.ContentURI != "" {
+							if resp == nil || resp.ContentURI != "" {
 								err = client.SetAvatarURL(resp.ContentURI)
 								if err != nil {
 									util.Config.Log.Errorln(err)

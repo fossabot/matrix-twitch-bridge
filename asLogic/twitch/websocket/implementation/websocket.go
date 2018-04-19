@@ -87,6 +87,7 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 			case <-w.Done:
 				util.Config.Log.Warnln("Done got closed")
 				util.Config.Log.Warnln("Closing old WS")
+				w.WS.SetWriteDeadline(time.Now().Add(time.Minute * 2))
 				grerr := w.WS.Close()
 				if grerr != nil {
 					util.Config.Log.Errorln(grerr)

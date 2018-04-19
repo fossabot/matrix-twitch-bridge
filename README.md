@@ -38,7 +38,7 @@ and how to bridge Twitch channels/users.
 Finally, the bridge can be run using the following command:
 
 ```bash
-matrix-twitch-bridge --client_id=<client_id from your Twitch App>
+matrix-twitch-bridge --client_id=<client_id from your Twitch App> --client_secret=<client_secret from your Twitch App> --public_adress=<ip with port used for the login callback> --bot_accessToken=<oauth token of a twitch user used to listen to chats> --bot_username=<matching username> --tls_cert=<path to .crt ssl file used for the login Server> --tls_key=<matching key file>
 ```
 
 If you have changed the default config location add the `--config`

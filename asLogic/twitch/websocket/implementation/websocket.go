@@ -86,13 +86,15 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 			select {
 			case <-w.Done:
 				util.Config.Log.Warnln("Done got closed")
+				util.Config.Log.Warnln("Closing old WS")
 				grerr := w.WS.Close()
 				if grerr != nil {
 					util.Config.Log.Errorln(grerr)
 					return
 				}
-				util.Config.Log.Warnln(w.TRoom + " died")
+				util.Config.Log.Warnf("%s died\n", w.TRoom)
 				util.Config.Log.Warnln("Reconnecting WS...")
+				util.Config.Log.Warnln("Replacing Websocket Holder")
 				*w = WebsocketHolder{
 					Done:        make(chan struct{}),
 					TwitchRooms: w.TwitchRooms,
@@ -101,12 +103,14 @@ func (w *WebsocketHolder) Connect(oauthToken, username string) (err error) {
 					Users:       w.Users,
 					TRoom:       w.TRoom,
 				}
+				util.Config.Log.Warnln("Start WS Connection")
 				grerr = w.Connect(oauthToken, username)
 				if grerr != nil {
 					util.Config.Log.Errorln(grerr)
 					return
 				}
 				if w.TRoom != "" {
+					util.Config.Log.Warnln("ReJoin Room")
 					grerr = w.Join(w.TRoom)
 					if grerr != nil {
 						util.Config.Log.Errorln(grerr)
@@ -279,9 +283,7 @@ func (w *WebsocketHolder) Listen() {
 					asUser.MXClient.SendText(room, parsedMessage.Message)
 				case "PING":
 					util.Config.Log.Debugln("[TWITCH]: Respond to Ping")
-					util.BotUser.Mux.Lock()
 					w.Pong(parsedMessage.Message)
-					util.BotUser.Mux.Unlock()
 				default:
 					util.Config.Log.Debugf("[TWITCH]: %+v\n", parsedMessage)
 				}
